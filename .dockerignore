@@ -5,5 +5,3 @@ coverage
 *.log
 .env
 .env.*
-# Only the deps stage needs .npmrc; its explicit COPY bypasses .dockerignore.
-.npmrc
