@@ -30,6 +30,6 @@
   "dependencies": {
     "@hono/node-server": "2.0.3",
     "hono": "4.12.19",
-    "tsx": "4.22.2"
+    "tsx": "4.22.3"
   }
 }
