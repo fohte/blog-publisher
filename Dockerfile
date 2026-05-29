@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # Keep the Node.js version in sync with .mise.toml.
-FROM node:26.1.0-slim AS base
+FROM node:26.2.0-slim AS base
 RUN corepack enable
 WORKDIR /app
 
