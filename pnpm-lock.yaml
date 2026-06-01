@@ -10,10 +10,10 @@ importers:
     dependencies:
       '@hono/node-server':
         specifier: 2.0.4
-        version: 2.0.4(hono@4.12.22)
+        version: 2.0.4(hono@4.12.23)
       hono:
-        specifier: 4.12.22
-        version: 4.12.22
+        specifier: 4.12.23
+        version: 4.12.23
       tsx:
         specifier: 4.22.3
         version: 4.22.3
@@ -1084,8 +1084,8 @@ packages:
     resolution: {integrity: sha512-EykJT/Q1KjTWctppgIAgfSO0tKVuZUjhgMr17kqTumMl6Afv3EISleU7qZUzoXDFTAHTDC4NOoG/ZxU3EvlMPQ==}
     engines: {node: '>=8'}
 
-  hono@4.12.22:
-    resolution: {integrity: sha512-7fvVPbB92zNRsQke+uiRGwtTuef0tB2Dg4hWxYfFNvkQhIltWoyi0ONReM5LWA+jJWS3nfT5lTq+qbsIpX0IQw==}
+  hono@4.12.23:
+    resolution: {integrity: sha512-eIaZ9qDgu7XV0pxOCrg7/WhnQ6Ivm22UcxhXx/A3dcbqbbYgBEkc6e/J/s7j2tS96zoB0S9VBdLwQNCWwUo4LA==}
     engines: {node: '>=16.9.0'}
 
   ignore@5.3.2:
@@ -1876,9 +1876,9 @@ snapshots:
     optionalDependencies:
       typescript: 6.0.3
 
-  '@hono/node-server@2.0.4(hono@4.12.22)':
+  '@hono/node-server@2.0.4(hono@4.12.23)':
     dependencies:
-      hono: 4.12.22
+      hono: 4.12.23
 
   '@humanfs/core@0.19.2':
     dependencies:
@@ -2554,7 +2554,7 @@ snapshots:
 
   has-flag@4.0.0: {}
 
-  hono@4.12.22: {}
+  hono@4.12.23: {}
 
   ignore@5.3.2: {}
 
