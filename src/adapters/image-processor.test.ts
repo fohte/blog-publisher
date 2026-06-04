@@ -119,8 +119,8 @@ describe('ImageProcessor', () => {
       { sourcePath: 'a.png', buffer: png1 },
       { sourcePath: 'b.png', buffer: png2 },
     ])
-    expect(diff.alreadyUploaded.map((i) => i.sourcePath)).toContain('a.png')
-    expect(diff.toUpload.map((i) => i.sourcePath)).toContain('b.png')
+    expect(diff.alreadyUploaded.map((i) => i.sourcePath)).toEqual(['a.png'])
+    expect(diff.toUpload.map((i) => i.sourcePath)).toEqual(['b.png'])
   })
 
   it('throws ImageUploadFailed on non-412 errors', async () => {

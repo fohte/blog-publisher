@@ -16,7 +16,7 @@ describe('transformMarkdownToMdx', () => {
       resolveSlug: (t) => (t === 'Other Post' ? 'other-post' : null),
     })
     expect(r.errors).toEqual([])
-    expect(r.mdx).toContain('[Other Post](/blog/posts/other-post)')
+    expect(r.mdx).toBe('See [Other Post](/blog/posts/other-post) for details.\n')
   })
 
   it('records error for unresolved wikilink', () => {
@@ -25,7 +25,13 @@ describe('transformMarkdownToMdx', () => {
       imageMap: emptyMap,
       resolveSlug: noResolver,
     })
-    expect(r.errors.some((e) => e.code === 'WikiLinkUnresolved')).toBe(true)
+    expect(r.errors).toEqual([
+      {
+        code: 'WikiLinkUnresolved',
+        message: 'wikilink cannot be resolved: Missing',
+      },
+    ])
+    expect(r.mdx).toBe('See \\[\\[Missing]] now.\n')
   })
 
   it('uses alias text for wikilinks', () => {
@@ -34,7 +40,8 @@ describe('transformMarkdownToMdx', () => {
       imageMap: emptyMap,
       resolveSlug: () => 'page',
     })
-    expect(r.mdx).toContain('[displayed](/blog/posts/page)')
+    expect(r.errors).toEqual([])
+    expect(r.mdx).toBe('[displayed](/blog/posts/page)\n')
   })
 
   it('converts embed code block to CardLink', () => {
@@ -43,7 +50,8 @@ describe('transformMarkdownToMdx', () => {
       imageMap: emptyMap,
       resolveSlug: noResolver,
     })
-    expect(r.mdx).toContain('<CardLink href="https://example.com" />')
+    expect(r.errors).toEqual([])
+    expect(r.mdx).toBe('<CardLink href="https://example.com" />\n')
   })
 
   it('converts <kbd> html to <Kbd>', () => {
@@ -52,7 +60,8 @@ describe('transformMarkdownToMdx', () => {
       imageMap: emptyMap,
       resolveSlug: noResolver,
     })
-    expect(r.mdx).toContain('<Kbd>Ctrl</Kbd>')
+    expect(r.errors).toEqual([])
+    expect(r.mdx).toBe('Press <Kbd>Ctrl</Kbd> now.\n')
   })
 
   it('converts SpeakerDeck iframe', () => {
@@ -62,16 +71,18 @@ describe('transformMarkdownToMdx', () => {
       imageMap: emptyMap,
       resolveSlug: noResolver,
     })
-    expect(r.mdx).toContain('<SpeakerDeck id="abc123def"')
+    expect(r.errors).toEqual([])
+    expect(r.mdx).toBe('<SpeakerDeck id="abc123def" />\n')
   })
 
-  it('does not wrap single image in ImageGrid', () => {
+  it('does not wrap a single image in ImageGrid', () => {
     const r = transformMarkdownToMdx({
       markdown: '![a](/a.png)\n',
       imageMap: emptyMap,
       resolveSlug: noResolver,
     })
-    expect(r.mdx).not.toContain('<ImageGrid')
+    expect(r.errors).toEqual([])
+    expect(r.mdx).toBe('![a](/a.png)\n')
   })
 
   it('wraps consecutive images in ImageGrid', () => {
@@ -80,7 +91,10 @@ describe('transformMarkdownToMdx', () => {
       imageMap: emptyMap,
       resolveSlug: noResolver,
     })
-    expect(r.mdx).toContain('<ImageGrid>')
+    expect(r.errors).toEqual([])
+    expect(r.mdx).toBe(
+      '<ImageGrid>\n  ![a](/a.png)\n\n  ![b](/b.png)\n</ImageGrid>\n',
+    )
   })
 
   it('replaces image URLs via imageMap', () => {
@@ -100,10 +114,13 @@ describe('transformMarkdownToMdx', () => {
       },
       resolveSlug: noResolver,
     })
-    expect(r.mdx).toContain('https://assets.fohte.net/images/abc.webp?w=1280')
+    expect(r.errors).toEqual([])
+    expect(r.mdx).toBe(
+      '![a](https://assets.fohte.net/images/abc.webp?w=1280\\&h=720)\n',
+    )
   })
 
-  it('converts ![[image]] embed to image', () => {
+  it('converts ![[image]] embed to image with R2 URL', () => {
     const r = transformMarkdownToMdx({
       markdown: '![[my.png]]\n',
       imageMap: {
@@ -114,7 +131,10 @@ describe('transformMarkdownToMdx', () => {
       },
       resolveSlug: noResolver,
     })
-    expect(r.mdx).toContain('https://assets.fohte.net/images/x.webp')
+    expect(r.errors).toEqual([])
+    expect(r.mdx).toBe(
+      '![my.png](https://assets.fohte.net/images/x.webp?w=100\\&h=50)\n',
+    )
   })
 
   it('preserves wikilinks inside fenced code blocks and inline code', () => {
@@ -124,8 +144,9 @@ describe('transformMarkdownToMdx', () => {
       resolveSlug: () => null,
     })
     expect(r.errors).toEqual([])
-    expect(r.mdx).toContain('`[[Page]]`')
-    expect(r.mdx).toContain('[[ExamplePage]]')
+    expect(r.mdx).toBe(
+      'Use `[[Page]]` to link.\n\n```text\n[[ExamplePage]]\n```\n',
+    )
   })
 
   it('detects callout as error', () => {
@@ -134,7 +155,10 @@ describe('transformMarkdownToMdx', () => {
       imageMap: emptyMap,
       resolveSlug: noResolver,
     })
-    expect(r.errors.some((e) => e.code === 'UnsupportedSyntax')).toBe(true)
+    expect(r.errors).toEqual([
+      { code: 'UnsupportedSyntax', message: 'Obsidian callout is not supported' },
+    ])
+    expect(r.mdx).toBe('> \\[!note]\n> body\n')
   })
 
   it('detects dataview as error', () => {
@@ -143,6 +167,9 @@ describe('transformMarkdownToMdx', () => {
       imageMap: emptyMap,
       resolveSlug: noResolver,
     })
-    expect(r.errors.some((e) => e.code === 'UnsupportedSyntax')).toBe(true)
+    expect(r.errors).toEqual([
+      { code: 'UnsupportedSyntax', message: 'dataview code block is not supported' },
+    ])
+    expect(r.mdx).toBe('```dataview\nlist\n```\n')
   })
 })
