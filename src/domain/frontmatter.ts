@@ -47,8 +47,31 @@ const ISO_8601 =
 
 const ASCII_ONLY = /^[\x20-\x7E]+$/
 
+function isValidIsoDate(value: string): boolean {
+  if (!ISO_8601.test(value)) return false
+  const [datePart] = value.split(/[T ]/)
+  if (datePart === undefined) return false
+  const [y, m, d] = datePart.split('-').map(Number)
+  if (y === undefined || m === undefined || d === undefined) return false
+  if (m < 1 || m > 12 || d < 1 || d > 31) return false
+  const dt = new Date(Date.UTC(y, m - 1, d))
+  return (
+    dt.getUTCFullYear() === y &&
+    dt.getUTCMonth() === m - 1 &&
+    dt.getUTCDate() === d
+  )
+}
+
 export function parseFrontmatter(source: string): FrontmatterParseResult {
-  const parsed = matter(source, { engines: { yaml: FAILSAFE_YAML } })
+  let parsed: ReturnType<typeof matter>
+  try {
+    parsed = matter(source, { engines: { yaml: FAILSAFE_YAML } })
+  } catch (e) {
+    throw new DomainError(
+      'UnsupportedSyntax',
+      `failed to parse frontmatter: ${e instanceof Error ? e.message : String(e)}`,
+    )
+  }
   const data = parsed.data as Record<string, unknown>
   const fm: Frontmatter = {
     title: typeof data['title'] === 'string' ? data['title'] : '',
@@ -76,10 +99,10 @@ export function validateFrontmatter(fm: Frontmatter): FrontmatterIssue[] {
   if (fm.title === '') {
     issues.push({ code: 'TitleMissing', message: 'title is required' })
   }
-  if (fm.date !== undefined && !ISO_8601.test(fm.date)) {
+  if (fm.date !== undefined && !isValidIsoDate(fm.date)) {
     issues.push({
       code: 'DateInvalid',
-      message: `date is not ISO 8601: ${fm.date}`,
+      message: `date is not a valid ISO 8601 calendar date: ${fm.date}`,
     })
   }
   if (fm.title !== '' && !ASCII_ONLY.test(fm.title) && fm.slug === undefined) {
@@ -118,9 +141,15 @@ export function sanitizeSlug(input: string): string {
 }
 
 export function deriveSlug(fm: Frontmatter): string | null {
-  if (fm.slug !== undefined && fm.slug !== '') return sanitizeSlug(fm.slug)
-  if (ASCII_ONLY.test(fm.title)) return sanitizeSlug(fm.title)
-  return null
+  const candidate =
+    fm.slug !== undefined && fm.slug !== ''
+      ? fm.slug
+      : ASCII_ONLY.test(fm.title)
+        ? fm.title
+        : null
+  if (candidate === null) return null
+  const sanitized = sanitizeSlug(candidate)
+  return sanitized !== '' ? sanitized : null
 }
 
 export function generatePublishedFilename(

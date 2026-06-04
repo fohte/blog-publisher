@@ -18,6 +18,12 @@ describe('parseFrontmatter', () => {
     expect(body.trim()).toBe('body')
   })
 
+  it('throws DomainError on malformed YAML frontmatter', () => {
+    expect(() =>
+      parseFrontmatter('---\ntitle: : bad\n  - oops\n---\nbody'),
+    ).toThrow(/frontmatter/)
+  })
+
   it('parses full frontmatter', () => {
     const src = `---
 title: Full
@@ -63,6 +69,12 @@ describe('validateFrontmatter', () => {
     ).toBe('DateInvalid')
   })
 
+  it('detects calendar-invalid date that matches the ISO 8601 shape', () => {
+    expect(
+      validateFrontmatter({ title: 'a', date: '2025-02-31' })[0]?.code,
+    ).toBe('DateInvalid')
+  })
+
   it('detects non-ASCII title without slug', () => {
     expect(validateFrontmatter({ title: '日本語' })[0]?.code).toBe(
       'SlugRequired',
@@ -92,6 +104,11 @@ describe('deriveSlug', () => {
 
   it('returns null for non-ASCII title without slug', () => {
     expect(deriveSlug({ title: '日本語' })).toBeNull()
+  })
+
+  it('returns null when slug sanitizes to empty', () => {
+    expect(deriveSlug({ title: 'x', slug: '日本語' })).toBeNull()
+    expect(deriveSlug({ title: '----' })).toBeNull()
   })
 })
 

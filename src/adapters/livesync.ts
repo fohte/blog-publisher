@@ -85,29 +85,25 @@ export class LiveSyncAdapter {
       'Basic ' +
       Buffer.from(`${config.username}:${config.password}`).toString('base64')
 
-    try {
-      const flags = await this.getDoc<{
-        useObfuscatedPath?: boolean
-        usePropertyEncryption?: boolean
-        usePathObfuscation?: boolean
-      }>('obsydian_livesync_version')
-      if (
-        flags?.useObfuscatedPath === true ||
-        flags?.usePathObfuscation === true
-      ) {
-        throw new DomainError(
-          'NoteDecryptFailed',
-          'LiveSync Path Obfuscation is enabled; disable it before running the publisher',
-        )
-      }
-      if (flags?.usePropertyEncryption === true) {
-        throw new DomainError(
-          'NoteDecryptFailed',
-          'LiveSync Property Encryption is enabled; disable it before running the publisher',
-        )
-      }
-    } catch (e) {
-      if (e instanceof DomainError) throw e
+    const flags = await this.getDoc<{
+      useObfuscatedPath?: boolean
+      usePropertyEncryption?: boolean
+      usePathObfuscation?: boolean
+    }>('obsydian_livesync_version')
+    if (
+      flags?.useObfuscatedPath === true ||
+      flags?.usePathObfuscation === true
+    ) {
+      throw new DomainError(
+        'NoteDecryptFailed',
+        'LiveSync Path Obfuscation is enabled; disable it before running the publisher',
+      )
+    }
+    if (flags?.usePropertyEncryption === true) {
+      throw new DomainError(
+        'NoteDecryptFailed',
+        'LiveSync Property Encryption is enabled; disable it before running the publisher',
+      )
     }
   }
 
@@ -143,7 +139,12 @@ export class LiveSyncAdapter {
     if (!res.ok) {
       throw new Error(`CouchDB _all_docs failed: ${String(res.status)}`)
     }
-    const body = (await res.json()) as AllDocsResponse
+    const body = (await res.json()) as AllDocsResponse | null
+    if (body === null || !Array.isArray(body.rows)) {
+      throw new Error(
+        `CouchDB _all_docs returned an unexpected response: ${JSON.stringify(body)}`,
+      )
+    }
     const out: NoteMetadata[] = []
     for (const row of body.rows) {
       const doc = row.doc as MetadataDocument | undefined

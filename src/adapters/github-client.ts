@@ -150,16 +150,16 @@ export class GitHubClient {
       state: 'open' | 'closed'
       pull_request?: { url: string }
     }>
-    const out: BlogPrSummary[] = []
-    for (const it of issues) {
-      if (it.pull_request === undefined) continue
-      const { data: prRaw } = await this.octokit.request(
-        'GET /repos/{owner}/{repo}/pulls/{pull_number}',
-        { owner: this.owner, repo: this.repo, pull_number: it.number },
-      )
-      out.push(this.toSummary(prRaw as PullResponse))
-    }
-    return out
+    const prPromises = issues
+      .filter((it) => it.pull_request !== undefined)
+      .map(async (it) => {
+        const { data: prRaw } = await this.octokit.request(
+          'GET /repos/{owner}/{repo}/pulls/{pull_number}',
+          { owner: this.owner, repo: this.repo, pull_number: it.number },
+        )
+        return this.toSummary(prRaw as PullResponse)
+      })
+    return Promise.all(prPromises)
   }
 
   private toSummary(pr: PullResponse): BlogPrSummary {
