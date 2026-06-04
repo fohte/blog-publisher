@@ -119,8 +119,7 @@ describe('transformMarkdownToMdx', () => {
 
   it('preserves wikilinks inside fenced code blocks and inline code', () => {
     const r = transformMarkdownToMdx({
-      markdown:
-        'Use `[[Page]]` to link.\n\n```text\n[[ExamplePage]]\n```\n',
+      markdown: 'Use `[[Page]]` to link.\n\n```text\n[[ExamplePage]]\n```\n',
       imageMap: emptyMap,
       resolveSlug: () => null,
     })
