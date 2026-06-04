@@ -16,7 +16,9 @@ describe('transformMarkdownToMdx', () => {
       resolveSlug: (t) => (t === 'Other Post' ? 'other-post' : null),
     })
     expect(r.errors).toEqual([])
-    expect(r.mdx).toBe('See [Other Post](/blog/posts/other-post) for details.\n')
+    expect(r.mdx).toBe(
+      'See [Other Post](/blog/posts/other-post) for details.\n',
+    )
   })
 
   it('records error for unresolved wikilink', () => {
@@ -156,7 +158,10 @@ describe('transformMarkdownToMdx', () => {
       resolveSlug: noResolver,
     })
     expect(r.errors).toEqual([
-      { code: 'UnsupportedSyntax', message: 'Obsidian callout is not supported' },
+      {
+        code: 'UnsupportedSyntax',
+        message: 'Obsidian callout is not supported',
+      },
     ])
     expect(r.mdx).toBe('> \\[!note]\n> body\n')
   })
@@ -168,7 +173,10 @@ describe('transformMarkdownToMdx', () => {
       resolveSlug: noResolver,
     })
     expect(r.errors).toEqual([
-      { code: 'UnsupportedSyntax', message: 'dataview code block is not supported' },
+      {
+        code: 'UnsupportedSyntax',
+        message: 'dataview code block is not supported',
+      },
     ])
     expect(r.mdx).toBe('```dataview\nlist\n```\n')
   })
