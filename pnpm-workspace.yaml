@@ -1,5 +1,7 @@
 allowBuilds:
   # required by vitest's transformer
   esbuild: true
+  # sharp ships a prebuilt libvips binary; opt into the install script so it lands in node_modules
+  sharp: true
   # required by @fohte/eslint-config -> eslint-plugin-import-x for "@/*" resolution
   unrs-resolver: true
