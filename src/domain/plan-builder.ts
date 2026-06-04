@@ -76,29 +76,29 @@ export async function buildPlan(
   const applyTime = options.applyTime ?? DEFAULT_APPLY_TIME
   const sorted = [...docIds].sort()
 
-  const parsed: ParsedNote[] = []
-  for (const docId of sorted) {
-    const note = await loaders.readNote(docId)
-    if (note === null) {
-      parsed.push({ docId, note: null })
-      continue
-    }
-    try {
-      const { frontmatter, body } = parseFrontmatter(note.content)
-      const slug = deriveSlug(frontmatter) ?? ''
-      let publishedFilename = ''
-      try {
-        publishedFilename = generatePublishedFilename(frontmatter, {
-          applyTime,
-        })
-      } catch {
-        publishedFilename = ''
+  const parsed: ParsedNote[] = await Promise.all(
+    sorted.map(async (docId): Promise<ParsedNote> => {
+      const note = await loaders.readNote(docId)
+      if (note === null) {
+        return { docId, note: null }
       }
-      parsed.push({ docId, note, frontmatter, body, slug, publishedFilename })
-    } catch {
-      parsed.push({ docId, note, parseFailed: true })
-    }
-  }
+      try {
+        const { frontmatter, body } = parseFrontmatter(note.content)
+        const slug = deriveSlug(frontmatter) ?? ''
+        let publishedFilename = ''
+        try {
+          publishedFilename = generatePublishedFilename(frontmatter, {
+            applyTime,
+          })
+        } catch {
+          publishedFilename = ''
+        }
+        return { docId, note, frontmatter, body, slug, publishedFilename }
+      } catch {
+        return { docId, note, parseFailed: true }
+      }
+    }),
+  )
 
   const slugByKey = new Map<string, string>()
   for (const p of parsed) {

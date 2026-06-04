@@ -85,6 +85,30 @@ function summarize(description: string | undefined, body: string): string {
   return body.trim().replace(/\s+/g, ' ').slice(0, 120)
 }
 
+const NOTES_FETCH_CONCURRENCY = 4
+
+async function mapWithConcurrency<T, U>(
+  items: readonly T[],
+  limit: number,
+  fn: (item: T) => Promise<U>,
+): Promise<U[]> {
+  const out: U[] = new Array<U>(items.length)
+  let cursor = 0
+  const workers = Array.from(
+    { length: Math.min(limit, items.length) },
+    async () => {
+      while (cursor < items.length) {
+        const i = cursor++
+        const item = items[i]
+        if (item === undefined) continue
+        out[i] = await fn(item)
+      }
+    },
+  )
+  await Promise.all(workers)
+  return out
+}
+
 async function listNotesHandler(
   deps: AppDeps,
 ): Promise<z.infer<typeof Note>[]> {
@@ -92,8 +116,10 @@ async function listNotesHandler(
     deps.notesPathPrefix,
   )
   metas.sort((a, b) => b.mtime - a.mtime)
-  const candidates = await Promise.all(
-    metas.map(async (meta) => {
+  const candidates = await mapWithConcurrency(
+    metas,
+    NOTES_FETCH_CONCURRENCY,
+    async (meta) => {
       let content
       try {
         content = (await deps.liveSync.readNote(meta.docId)).content
@@ -122,7 +148,7 @@ async function listNotesHandler(
       const desc = frontmatter.description ?? summarize(undefined, body)
       if (desc !== '') note.description = desc
       return note
-    }),
+    },
   )
   return candidates.filter((n): n is z.infer<typeof Note> => n !== null)
 }

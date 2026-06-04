@@ -91,7 +91,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   return {
     port,
     bearerToken: req(env, 'BEARER_TOKEN'),
-    notesPathPrefix: env['NOTES_PATH_PREFIX'] ?? 'notes/blogs/',
+    notesPathPrefix: opt(env, 'NOTES_PATH_PREFIX') ?? 'notes/blogs/',
     liveSync: (() => {
       const passphrase = opt(env, 'LIVESYNC_PASSPHRASE')
       return {
@@ -108,7 +108,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
       installationId: reqInt(env, 'GITHUB_APP_INSTALLATION_ID'),
       owner: req(env, 'GITHUB_OWNER'),
       repo: req(env, 'GITHUB_REPO'),
-      defaultBranch: env['GITHUB_DEFAULT_BRANCH'] ?? 'master',
+      defaultBranch: opt(env, 'GITHUB_DEFAULT_BRANCH') ?? 'master',
     },
     r2: {
       bucket: req(env, 'R2_BUCKET'),

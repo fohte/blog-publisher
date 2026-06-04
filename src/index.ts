@@ -1,5 +1,3 @@
-import { readFile } from 'node:fs/promises'
-
 import { S3Client } from '@aws-sdk/client-s3'
 import { serve } from '@hono/node-server'
 
@@ -55,14 +53,9 @@ async function main(): Promise<void> {
     github,
     apply: {
       imageProcessor,
-      readImage: async (sourcePath) => {
-        try {
-          const buffer = await readFile(sourcePath)
-          return { sourcePath, buffer }
-        } catch {
-          return null
-        }
-      },
+      // Vault attachments resolve through LiveSync chunks in a follow-up;
+      // until then images referenced by notes are not uploaded.
+      readImage: () => Promise.resolve(null),
       defaultBranch: config.github.defaultBranch,
     },
   })
