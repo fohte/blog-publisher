@@ -76,7 +76,7 @@ describe('apply', () => {
     expect(result.kind).toBe('success')
     if (result.kind !== 'success') return
     expect(result.prNumber).toBe(42)
-    expect(result.branch).toMatch(/^blog\/[0-9a-f]{8}$/)
+    expect(result.branch).toMatch(/^blog\/[0-9a-f]{12}$/)
     expect(deps.__github.createBranch).toHaveBeenCalledOnce()
     expect(deps.__github.commitFiles).toHaveBeenCalledOnce()
     expect(deps.__github.createPullRequest).toHaveBeenCalledOnce()
@@ -125,7 +125,7 @@ describe('apply', () => {
     const result = await apply(['a'], deps)
     expect(result.kind).toBe('failed')
     expect(deps.__github.deleteBranch).toHaveBeenCalledWith(
-      expect.stringMatching(/^blog\/[0-9a-f]{8}$/),
+      expect.stringMatching(/^blog\/[0-9a-f]{12}$/),
     )
   })
 

@@ -1,3 +1,5 @@
+import { timingSafeEqual } from 'node:crypto'
+
 import {
   ApplyResult,
   BlogPrSummary,
@@ -59,7 +61,10 @@ function bearerMiddleware(token: string) {
         401,
       )
     }
-    if (auth !== `Bearer ${token}`) {
+    const expected = `Bearer ${token}`
+    const a = Buffer.from(auth)
+    const b = Buffer.from(expected)
+    if (a.length !== b.length || !timingSafeEqual(a, b)) {
       return c.json(
         { error: { code: 'Unauthorized', message: 'invalid bearer token' } },
         401,
@@ -87,34 +92,39 @@ async function listNotesHandler(
     deps.notesPathPrefix,
   )
   metas.sort((a, b) => b.mtime - a.mtime)
-  const out: z.infer<typeof Note>[] = []
-  for (const meta of metas) {
-    let content
-    try {
-      content = (await deps.liveSync.readNote(meta.docId)).content
-    } catch {
-      continue
-    }
-    const { frontmatter, body } = parseFrontmatter(content)
-    if (frontmatter.draft === true) continue
-    if (frontmatter.title === '') continue
-    const filename = frontmatter.publishedFilename
-    let kind: 'new' | 'update' = 'new'
-    if (filename !== undefined && filename !== '') {
-      kind = (await deps.github.existsOnFohteNet(filename)) ? 'update' : 'new'
-    }
-    const note: z.infer<typeof Note> = {
-      docId: meta.docId,
-      path: meta.path,
-      title: frontmatter.title,
-      kind,
-      mtime: meta.mtime,
-    }
-    const desc = frontmatter.description ?? summarize(undefined, body)
-    if (desc !== '') note.description = desc
-    out.push(note)
-  }
-  return out
+  const candidates = await Promise.all(
+    metas.map(async (meta) => {
+      let content
+      try {
+        content = (await deps.liveSync.readNote(meta.docId)).content
+      } catch (e) {
+        console.warn('[notes] readNote failed; skipping', {
+          docId: meta.docId,
+          error: e instanceof Error ? e.message : String(e),
+        })
+        return null
+      }
+      const { frontmatter, body } = parseFrontmatter(content)
+      if (frontmatter.draft === true) return null
+      if (frontmatter.title === '') return null
+      const filename = frontmatter.publishedFilename
+      let kind: 'new' | 'update' = 'new'
+      if (filename !== undefined && filename !== '') {
+        kind = (await deps.github.existsOnFohteNet(filename)) ? 'update' : 'new'
+      }
+      const note: z.infer<typeof Note> = {
+        docId: meta.docId,
+        path: meta.path,
+        title: frontmatter.title,
+        kind,
+        mtime: meta.mtime,
+      }
+      const desc = frontmatter.description ?? summarize(undefined, body)
+      if (desc !== '') note.description = desc
+      return note
+    }),
+  )
+  return candidates.filter((n): n is z.infer<typeof Note> => n !== null)
 }
 
 export function createApp(deps: AppDeps): OpenAPIHono {
@@ -344,7 +354,7 @@ export function createApp(deps: AppDeps): OpenAPIHono {
       {
         error: {
           code: 'InternalServerError',
-          message: err instanceof Error ? err.message : String(err),
+          message: 'internal server error',
         },
       },
       500,

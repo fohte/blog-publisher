@@ -118,7 +118,7 @@ describe('createApp', () => {
     })
     expect(res.status).toBe(200)
     const body = (await res.json()) as { signature: string; items: unknown[] }
-    expect(body.signature).toMatch(/^[0-9a-f]{8}$/)
+    expect(body.signature).toMatch(/^[0-9a-f]{12}$/)
     expect(body.items).toHaveLength(1)
   })
 
@@ -134,14 +134,19 @@ describe('createApp', () => {
     expect(body.kind).toBe('success')
   })
 
-  it('uncaught errors become 500 with { error } body', async () => {
+  it('uncaught errors become 500 with a generic { error } body (no leak)', async () => {
     const deps = makeDeps()
-    deps.github.listBlogPrs = vi.fn().mockRejectedValue(new Error('boom'))
+    deps.github.listBlogPrs = vi
+      .fn()
+      .mockRejectedValue(new Error('secret-leak-marker'))
     const app = createApp(deps)
     const res = await app.request('/prs', { headers: AUTH })
     expect(res.status).toBe(500)
-    const body = (await res.json()) as { error: { code: string } }
+    const body = (await res.json()) as {
+      error: { code: string; message: string }
+    }
     expect(body.error.code).toBe('InternalServerError')
+    expect(body.error.message).not.toContain('secret-leak-marker')
   })
 
   it('/doc returns OpenAPI spec (no auth required)', async () => {

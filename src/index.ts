@@ -55,9 +55,6 @@ async function main(): Promise<void> {
     github,
     apply: {
       imageProcessor,
-      // Obsidian attachment resolution via LiveSync chunks is out of scope here;
-      // a follow-up wires the vault image reader. Treating sourcePath as a local
-      // file path keeps the orchestrator end-to-end exercisable.
       readImage: async (sourcePath) => {
         try {
           const buffer = await readFile(sourcePath)

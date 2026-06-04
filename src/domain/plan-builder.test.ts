@@ -32,7 +32,7 @@ describe('computeSignature', () => {
   })
 
   it('is 8 hex chars', () => {
-    expect(computeSignature(['a', 'b'])).toMatch(/^[0-9a-f]{8}$/)
+    expect(computeSignature(['a', 'b'])).toMatch(/^[0-9a-f]{12}$/)
   })
 
   it('changes when docIds differ', () => {

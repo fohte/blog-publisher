@@ -37,7 +37,7 @@ interface ParsedNote {
 
 export function computeSignature(docIds: readonly string[]): string {
   const sorted = [...docIds].sort()
-  return createHash('sha1').update(sorted.join('\n')).digest('hex').slice(0, 8)
+  return createHash('sha1').update(sorted.join('\n')).digest('hex').slice(0, 12)
 }
 
 const DEFAULT_APPLY_TIME = '1970-01-01T00:00:00.000Z'

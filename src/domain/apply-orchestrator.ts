@@ -179,8 +179,11 @@ export async function apply(
     if (branchCreated) {
       try {
         await deps.github.deleteBranch(branch)
-      } catch {
-        // best-effort cleanup; surface the original error below
+      } catch (cleanupErr) {
+        console.error('[apply] orphan branch left behind', {
+          branch,
+          cleanupErr,
+        })
       }
     }
     return {
