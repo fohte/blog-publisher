@@ -8,24 +8,18 @@ import {
 import sharp from 'sharp'
 
 import { DomainError } from '@/domain/errors'
+import type {
+  ImageMapEntry as ImageUrlMapEntry,
+  ImageUrlMap,
+  ImageVariant as ImageVariantUrl,
+} from '@/domain/mdx-transformer'
+
+export type { ImageUrlMap, ImageUrlMapEntry, ImageVariantUrl }
 
 export interface ImageInput {
   sourcePath: string
   buffer: Buffer
 }
-
-export interface ImageVariantUrl {
-  width: number
-  height: number
-  url: string
-}
-
-export interface ImageUrlMapEntry {
-  base: string
-  variants: ImageVariantUrl[]
-}
-
-export type ImageUrlMap = Record<string, ImageUrlMapEntry>
 
 export interface DiffResult {
   toUpload: ImageInput[]

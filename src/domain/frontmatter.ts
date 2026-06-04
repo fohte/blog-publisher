@@ -1,6 +1,8 @@
 import matter from 'gray-matter'
 import yaml from 'js-yaml'
 
+import { DomainError } from '@/domain/errors'
+
 const FAILSAFE_YAML = {
   parse: (input: string): object => {
     const loaded: unknown = yaml.load(input, { schema: yaml.JSON_SCHEMA })
@@ -130,7 +132,10 @@ export function generatePublishedFilename(
   }
   const slug = deriveSlug(fm)
   if (slug === null) {
-    throw new Error('cannot derive slug: non-ASCII title without slug')
+    throw new DomainError(
+      'SlugRequired',
+      'cannot derive slug: non-ASCII title without slug',
+    )
   }
   const datePart = (fm.date ?? options.applyTime).slice(0, 10)
   return `${datePart}-${slug}.mdx`

@@ -322,7 +322,12 @@ export class GitHubClient {
     const headSha = pr.head.sha
     const { data: checksRaw } = await this.octokit.request(
       'GET /repos/{owner}/{repo}/commits/{ref}/check-runs',
-      { owner: this.owner, repo: this.repo, ref: headSha },
+      {
+        owner: this.owner,
+        repo: this.repo,
+        ref: headSha,
+        per_page: 100,
+      },
     )
     const checks = checksRaw as CheckRunsResponse
     const failed: string[] = []
@@ -355,6 +360,7 @@ export class GitHubClient {
           repo: this.repo,
           ref: pr.head.ref,
           environment: 'Preview',
+          per_page: 100,
         },
       )
       const deploys = deploysRaw as DeploymentResponse[]
@@ -373,8 +379,9 @@ export class GitHubClient {
           statuses[0]?.environment_url ?? statuses[0]?.target_url ?? null
         if (url !== null && url !== '') previewUrl = url
       }
-    } catch {
-      // ignore deployment lookup failures
+    } catch (e) {
+      // Deployment lookup is best-effort; surface the failure so a missing previewUrl is debuggable.
+      console.warn('[github-client] deployment lookup failed', e)
     }
     return {
       state,

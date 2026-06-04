@@ -1,4 +1,12 @@
-import type { BlockContent, Code, Image, Paragraph, Root } from 'mdast'
+import type {
+  BlockContent,
+  Code,
+  Image,
+  Paragraph,
+  PhrasingContent,
+  Root,
+  Text,
+} from 'mdast'
 import { fromMarkdown } from 'mdast-util-from-markdown'
 import { mdxJsxFromMarkdown, mdxJsxToMarkdown } from 'mdast-util-mdx-jsx'
 import { toMarkdown } from 'mdast-util-to-markdown'
@@ -52,8 +60,6 @@ interface MdxJsxFlowElement {
   children: BlockContent[]
 }
 
-const WIKILINK_RE = /\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g
-const EMBED_IMAGE_RE = /!\[\[([^\]]+)\]\]/g
 const SPEAKERDECK_RE =
   /<iframe[^>]+src=["']https:\/\/speakerdeck\.com\/player\/([a-f0-9]+)["'][^>]*><\/iframe>/i
 
@@ -61,44 +67,70 @@ function attr(name: string, value: string | null): MdxJsxAttribute {
   return { type: 'mdxJsxAttribute', name, value }
 }
 
-function preprocessObsidianSyntax(
-  markdown: string,
+function expandObsidianInlineSyntax(
+  tree: Root,
   resolveSlug: SlugResolver,
   errors: TransformIssue[],
-): string {
-  let out = markdown.replace(EMBED_IMAGE_RE, (_m, target: string) => {
-    return `![${target}](${target})`
+): void {
+  // Operating on text nodes (not raw markdown) preserves wikilinks inside ``` code / `inline code` because
+  // those contain string `value` rather than child `text` nodes.
+  visit(tree, 'text', (node, index, parent) => {
+    if (parent === undefined || index === undefined) return
+    const out = expandWikilinksInText(node.value, resolveSlug, errors)
+    if (out === null) return
+    ;(parent as { children: PhrasingContent[] }).children.splice(
+      index,
+      1,
+      ...out,
+    )
+    return [SKIP, index + out.length]
   })
-  out = out.replace(WIKILINK_RE, (_m, target: string, label?: string) => {
-    const slug = resolveSlug(target)
-    const text = label ?? target
-    if (slug === null) {
-      errors.push({
-        code: 'WikiLinkUnresolved',
-        message: `wikilink cannot be resolved: ${target}`,
-      })
-      return `[[${target}${label !== undefined ? `|${label}` : ''}]]`
-    }
-    return `[${text}](/blog/posts/${slug})`
-  })
-  return out
 }
 
-function buildImageNode(
-  alt: string,
-  url: string,
-  width?: number,
-  height?: number,
-): Image {
-  const withQuery =
-    width !== undefined && height !== undefined
-      ? `${url}?w=${String(width)}&h=${String(height)}`
-      : url
-  return {
-    type: 'image',
-    url: withQuery,
-    alt,
+function expandWikilinksInText(
+  value: string,
+  resolveSlug: SlugResolver,
+  errors: TransformIssue[],
+): PhrasingContent[] | null {
+  if (!value.includes('[[')) return null
+  const parts: PhrasingContent[] = []
+  let cursor = 0
+  const pushText = (s: string) => {
+    if (s.length === 0) return
+    parts.push({ type: 'text', value: s })
   }
+  // Handle embed-image form `![[target]]` and link form `[[target|label]]` in one pass.
+  const combined = /(!?)\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g
+  let m: RegExpExecArray | null
+  while ((m = combined.exec(value)) !== null) {
+    pushText(value.slice(cursor, m.index))
+    const bang = m[1] === '!'
+    const target = m[2] ?? ''
+    const label = m[3]
+    if (bang) {
+      parts.push({ type: 'image', url: target, alt: target })
+    } else {
+      const slug = resolveSlug(target)
+      if (slug === null) {
+        errors.push({
+          code: 'WikiLinkUnresolved',
+          message: `wikilink cannot be resolved: ${target}`,
+        })
+        pushText(m[0])
+      } else {
+        const text = label ?? target
+        parts.push({
+          type: 'link',
+          url: `/blog/posts/${slug}`,
+          children: [{ type: 'text', value: text } as Text],
+        } as unknown as PhrasingContent)
+      }
+    }
+    cursor = m.index + m[0].length
+  }
+  if (cursor === 0) return null
+  pushText(value.slice(cursor))
+  return parts
 }
 
 function replaceImageUrls(tree: Root, imageMap: ImageUrlMap): void {
@@ -231,31 +263,24 @@ export function transformMarkdownToMdx(input: TransformInput): TransformResult {
   const errors: TransformIssue[] = []
   const warnings: TransformIssue[] = []
 
-  const preprocessed = preprocessObsidianSyntax(
-    input.markdown,
-    input.resolveSlug,
-    errors,
-  )
-
-  const tree = fromMarkdown(preprocessed, {
+  const tree = fromMarkdown(input.markdown, {
     extensions: [mdxJsxMicromark()],
     mdastExtensions: [mdxJsxFromMarkdown()],
   })
 
-  // Order matters per design: images first, then kbd, SpeakerDeck, CardLink, callout/dataview detect, then ImageGrid wrap last.
+  expandObsidianInlineSyntax(tree, input.resolveSlug, errors)
   replaceImageUrls(tree, input.imageMap)
   transformKbdInline(tree)
   transformSpeakerDeck(tree)
   transformEmbedCodeBlocks(tree, errors)
   detectCallout(tree, errors)
+  // wrapImageGrids depends on the final image node positions, so it runs last.
   wrapImageGrids(tree)
 
   const mdx = toMarkdown(tree, {
     extensions: [mdxJsxToMarkdown()],
     bullet: '-',
   })
-
-  void buildImageNode
 
   return { mdx, errors, warnings }
 }

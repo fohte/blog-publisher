@@ -117,6 +117,18 @@ describe('transformMarkdownToMdx', () => {
     expect(r.mdx).toContain('https://assets.fohte.net/images/x.webp')
   })
 
+  it('preserves wikilinks inside fenced code blocks and inline code', () => {
+    const r = transformMarkdownToMdx({
+      markdown:
+        'Use `[[Page]]` to link.\n\n```text\n[[ExamplePage]]\n```\n',
+      imageMap: emptyMap,
+      resolveSlug: () => null,
+    })
+    expect(r.errors).toEqual([])
+    expect(r.mdx).toContain('`[[Page]]`')
+    expect(r.mdx).toContain('[[ExamplePage]]')
+  })
+
   it('detects callout as error', () => {
     const r = transformMarkdownToMdx({
       markdown: '> [!note]\n> body\n',

@@ -59,15 +59,7 @@ type Fetch = (
   text: () => Promise<string>
 }>
 
-/**
- * Direct CouchDB reader for Obsidian LiveSync vault databases.
- *
- * Follows the documented LiveSync data layout (MetadataDocument + EntryLeaf chunks).
- * Path Obfuscation / Property Encryption are not supported here — when detected at init
- * the adapter throws so the Service can fail-fast. E2EE chunk decryption requires the
- * full LiveSync src/lib (HKDF v12 keying); when a passphrase is configured but no
- * decryption hook is wired in, reads of encrypted chunks throw NoteDecryptFailed.
- */
+/** Direct CouchDB reader for Obsidian LiveSync vault databases. */
 export class LiveSyncAdapter {
   private config: LiveSyncConfig | null = null
   private readonly fetchImpl: Fetch
@@ -93,7 +85,6 @@ export class LiveSyncAdapter {
       'Basic ' +
       Buffer.from(`${config.username}:${config.password}`).toString('base64')
 
-    // Probe a known LiveSync configuration document to detect Path Obfuscation / Property Encryption.
     try {
       const flags = await this.getDoc<{
         useObfuscatedPath?: boolean
@@ -117,7 +108,6 @@ export class LiveSyncAdapter {
       }
     } catch (e) {
       if (e instanceof DomainError) throw e
-      // Missing version doc is acceptable for tests/integration probes.
     }
   }
 
@@ -143,9 +133,7 @@ export class LiveSyncAdapter {
 
   async listNotesByPath(prefix: string): Promise<NoteMetadata[]> {
     this.requireConfig()
-    // Use _all_docs with include_docs and filter client-side by `path`.
-    // For metadata-only listing we avoid include_docs=true on huge vaults in production
-    // by using a view; for now the simple path is acceptable.
+    // include_docs=true scales with total vault size, not prefix matches; replace with a CouchDB view when vault grows.
     const res = await this.fetchImpl(
       `${this.baseUrl}/_all_docs?include_docs=true`,
       {
@@ -174,7 +162,8 @@ export class LiveSyncAdapter {
   }
 
   private async decode(cipher: string): Promise<string> {
-    if (!cipher.startsWith('%=') && !cipher.startsWith('%')) return cipher
+    // LiveSync marks encrypted chunks with the `%=` prefix (HKDF v12).
+    if (!cipher.startsWith('%=')) return cipher
     if (this.decryptChunk === undefined) {
       throw new DomainError(
         'NoteDecryptFailed',

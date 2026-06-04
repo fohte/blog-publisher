@@ -19,8 +19,7 @@ export default config(
     },
   },
   {
-    // Adapters interact with external APIs whose responses are typed as `unknown`;
-    // narrowing them with `as` is the pragmatic boundary cast.
+    // Octokit / S3 / fetch / mdast extension responses are typed as `unknown`; adapters narrow at the boundary.
     files: ['src/adapters/**/*.ts', 'src/domain/mdx-transformer.ts'],
     rules: {
       '@typescript-eslint/no-unsafe-type-assertion': 'off',
