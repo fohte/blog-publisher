@@ -34,4 +34,15 @@ export default config(
       '@typescript-eslint/only-throw-error': 'off',
     },
   },
+  {
+    // E2E fixtures and the fake-GitHub harness narrow Octokit-shaped `unknown`
+    // payloads and share a tiny per-folder module graph.
+    files: ['test/e2e/**/*.ts'],
+    rules: {
+      '@typescript-eslint/no-unsafe-type-assertion': 'off',
+      '@typescript-eslint/require-await': 'off',
+      '@typescript-eslint/no-base-to-string': 'off',
+      'no-restricted-imports': 'off',
+    },
+  },
 )
