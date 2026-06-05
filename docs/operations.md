@@ -5,10 +5,8 @@ This document covers the prerequisites that live outside this repository
 (Obsidian LiveSync, GitHub App, Slack App) plus the ConfigMap / Secret
 template that the service consumes.
 
-The Kubernetes manifests themselves live in
-[`fohte/infra`](https://github.com/fohte/infra) under
-`kubernetes/home/manifests/blog-publisher/`; this repo only ships the
-Dockerfile and configuration contract.
+The Kubernetes manifests themselves are tracked outside this repository;
+this repo only ships the Dockerfile and configuration contract.
 
 ## System overview
 
@@ -27,10 +25,9 @@ share the same token via their respective K8s Secrets.
 
 ## LiveSync (CouchDB) prerequisites
 
-The Service reads the vault directly from CouchDB through the schema
-documented in `specs/blog-publish-via-livesync/research/livesync-couchdb-schema.md`.
-For the reader to be able to find and decrypt notes, the following vault
-settings MUST hold:
+The Service reads the vault directly from CouchDB through Obsidian
+LiveSync's on-disk schema. For the reader to be able to find and decrypt
+notes, the following vault settings MUST hold:
 
 | Setting               | Required value | Why                                                                                              |
 | --------------------- | -------------- | ------------------------------------------------------------------------------------------------ |

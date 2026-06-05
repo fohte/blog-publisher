@@ -1,12 +1,10 @@
 /**
- * Helpers for shaping documents the way Obsidian LiveSync stores them in CouchDB
- * with Path Obfuscation / Property Encryption disabled.
+ * Helpers for shaping documents the way Obsidian LiveSync stores them in
+ * CouchDB with Path Obfuscation / Property Encryption disabled.
  *
  * LiveSync splits a note body into chunks (`h:<hash>`) and stores them as
- * separate documents alongside a metadata document that references them through
- * `children` (or `eden` for small notes). See
- * specs/blog-publish-via-livesync/research/livesync-couchdb-schema.md for the
- * upstream layout we mimic.
+ * separate documents alongside a metadata document that references them
+ * through `children` (or `eden` for small notes).
  */
 
 import { createHash } from 'node:crypto'
