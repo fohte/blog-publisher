@@ -7,6 +7,10 @@ export default defineConfig({
     },
   },
   test: {
-    exclude: ['node_modules/**', 'test/e2e/**'],
+    include: ['test/e2e/**/*.test.ts'],
+    testTimeout: 60_000,
+    hookTimeout: 60_000,
+    pool: 'forks',
+    fileParallelism: false,
   },
 })
