@@ -62,12 +62,16 @@ function dbUrl(ep: E2EEndpoints): string {
 }
 
 export async function probeServices(ep: E2EEndpoints): Promise<boolean> {
+  // AbortSignal so a half-dead container (LISTEN + no response) does not hang
+  // the top-level await that gates suite execution.
+  const signal = AbortSignal.timeout(2_000)
   try {
-    const couch = await fetch(`${ep.couchUrl.replace(/\/$/, '')}/_up`)
+    const couch = await fetch(`${ep.couchUrl.replace(/\/$/, '')}/_up`, {
+      signal,
+    })
     if (!couch.ok) return false
-    const s3 = await fetch(`${ep.s3Endpoint}/minio/health/live`)
-    if (!s3.ok) return false
-    return true
+    const s3 = await fetch(`${ep.s3Endpoint}/minio/health/live`, { signal })
+    return s3.ok
   } catch {
     return false
   }
@@ -78,9 +82,14 @@ export async function resetCouchDb(ep: E2EEndpoints): Promise<void> {
     Authorization: couchAuthHeader(ep),
     'Content-Type': 'application/json',
   }
-  await fetch(dbUrl(ep), { method: 'DELETE', headers })
+  const del = await fetch(dbUrl(ep), { method: 'DELETE', headers })
+  if (!del.ok && del.status !== 404) {
+    throw new Error(`failed to drop CouchDB database: ${String(del.status)}`)
+  }
+  // 412 here means the DELETE did not actually remove the database, so it must
+  // surface as a test setup failure rather than be silently accepted.
   const create = await fetch(dbUrl(ep), { method: 'PUT', headers })
-  if (!create.ok && create.status !== 412) {
+  if (!create.ok) {
     throw new Error(
       `failed to create CouchDB database: ${String(create.status)}`,
     )

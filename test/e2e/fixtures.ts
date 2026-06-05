@@ -34,11 +34,7 @@ function chunkId(data: string): string {
   return `h:${createHash('sha1').update(data).digest('hex').slice(0, 20)}`
 }
 
-/**
- * Build a LiveSync-shaped note from a path + content string. We chunk on
- * 1024-byte windows so multi-chunk reassembly is exercised by realistic
- * fixtures even though our fixtures are small.
- */
+/** Build a LiveSync-shaped note from a path + content string. */
 export function buildNoteFixture(input: {
   docId: string
   path: string
