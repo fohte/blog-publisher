@@ -1,0 +1,199 @@
+import type { ApplyResult, BlogPrSummary } from '@fohte/blog-publisher-contract'
+import yaml from 'js-yaml'
+
+import type { FileToCommit, GitHubClient } from '@/adapters/github-client'
+import type { ImageInput, ImageProcessor } from '@/adapters/image-processor'
+import type { LiveSyncNote } from '@/adapters/livesync'
+import {
+  generatePublishedFilename,
+  mapToPublishedFrontmatter,
+  parseFrontmatter,
+} from '@/domain/frontmatter'
+import {
+  type ImageUrlMap,
+  type SlugResolver,
+  transformMarkdownToMdx,
+} from '@/domain/mdx-transformer'
+import { buildPlan, type PlanLoaders } from '@/domain/plan-builder'
+
+export interface ApplyDeps {
+  loaders: PlanLoaders
+  imageProcessor: Pick<ImageProcessor, 'uploadAll'>
+  github: Pick<
+    GitHubClient,
+    | 'findExistingPrByBranch'
+    | 'createBranch'
+    | 'deleteBranch'
+    | 'commitFiles'
+    | 'createPullRequest'
+  >
+  readImage(sourcePath: string): Promise<ImageInput | null>
+  defaultBranch: string
+  postsDir?: string
+  now?: () => string
+}
+
+function noteBaseName(path: string): string {
+  return path.replace(/^.*\//, '').replace(/\.[^.]+$/, '')
+}
+
+function renderMdx(frontmatter: object, body: string): string {
+  const yamlText = yaml.dump(frontmatter, { lineWidth: -1 }).trimEnd()
+  return `---\n${yamlText}\n---\n\n${body}`
+}
+
+export async function apply(
+  docIds: readonly string[],
+  deps: ApplyDeps,
+): Promise<ApplyResult> {
+  const now = deps.now ?? (() => new Date().toISOString())
+  const applyTime = now()
+  const postsDir = deps.postsDir ?? 'src/content/posts'
+
+  const plan = await buildPlan(docIds, deps.loaders, { applyTime })
+  if (plan.errors.length > 0) {
+    return { kind: 'planChanged', newPlan: plan }
+  }
+
+  const branch = `blog/${plan.signature}`
+  const existing = await deps.github.findExistingPrByBranch(branch)
+  if (existing !== null && existing.state === 'open') {
+    return {
+      kind: 'alreadyApplied',
+      prNumber: existing.number,
+      prUrl: existing.url,
+    }
+  }
+
+  const eligible = plan.items.filter((i) => i.kind !== 'skipped')
+  if (eligible.length === 0) {
+    return {
+      kind: 'failed',
+      code: 'NoChanges',
+      message: 'no eligible items to apply',
+    }
+  }
+
+  const noteCache = new Map<string, LiveSyncNote>()
+  for (const item of eligible) {
+    const n = await deps.loaders.readNote(item.docId)
+    if (n === null) {
+      return {
+        kind: 'failed',
+        code: 'NoteDecryptFailed',
+        message: `note disappeared: ${item.docId}`,
+      }
+    }
+    noteCache.set(item.docId, n)
+  }
+
+  const imageInputs: ImageInput[] = []
+  for (const img of plan.imagesToUpload) {
+    const i = await deps.readImage(img.sourcePath)
+    if (i !== null) imageInputs.push(i)
+  }
+
+  let imageMap: ImageUrlMap
+  try {
+    imageMap = await deps.imageProcessor.uploadAll(imageInputs)
+  } catch (e) {
+    return {
+      kind: 'failed',
+      code: 'ImageUploadFailed',
+      message: e instanceof Error ? e.message : String(e),
+    }
+  }
+
+  const slugByKey = new Map<string, string>()
+  for (const item of eligible) {
+    const n = noteCache.get(item.docId)
+    if (n === undefined) continue
+    slugByKey.set(item.title, item.slug)
+    slugByKey.set(noteBaseName(n.path), item.slug)
+  }
+  const resolveSlug: SlugResolver = (target) => slugByKey.get(target) ?? null
+
+  const files: FileToCommit[] = []
+  for (const item of eligible) {
+    const raw = noteCache.get(item.docId)
+    if (raw === undefined) continue
+    const { frontmatter, body } = parseFrontmatter(raw.content)
+    const transform = transformMarkdownToMdx({
+      markdown: body,
+      imageMap,
+      resolveSlug,
+    })
+    if (transform.errors.length > 0) {
+      return {
+        kind: 'planChanged',
+        newPlan: {
+          ...plan,
+          errors: transform.errors.map((e) => ({
+            docId: item.docId,
+            code: e.code,
+            message: e.message,
+          })),
+        },
+      }
+    }
+    const isUpdate = item.kind === 'modified'
+    const published = mapToPublishedFrontmatter(frontmatter, {
+      applyTime,
+      isUpdate,
+    })
+    const filename =
+      item.publishedFilename !== ''
+        ? item.publishedFilename
+        : generatePublishedFilename(frontmatter, { applyTime })
+    files.push({
+      path: `${postsDir}/${filename}`,
+      content: renderMdx(published, transform.mdx),
+      encoding: 'utf-8',
+    })
+  }
+
+  let branchCreated = false
+  try {
+    await deps.github.createBranch(deps.defaultBranch, branch)
+    branchCreated = true
+
+    await deps.github.commitFiles(
+      branch,
+      files,
+      `blog: publish ${String(eligible.length)} post(s)\n\nsignature: ${plan.signature}`,
+    )
+
+    const titles = eligible.map((i) => i.title).join(', ')
+    const fullTitle = `blog: ${titles}`
+    // GitHub's PR title field hard-caps at 256 chars; truncate to stay below.
+    const prTitle =
+      fullTitle.length > 255 ? `${fullTitle.slice(0, 252)}...` : fullTitle
+    const pr: BlogPrSummary = await deps.github.createPullRequest(
+      branch,
+      prTitle,
+      `Auto-generated by blog-publisher.\n\nsignature: \`${plan.signature}\``,
+    )
+    return {
+      kind: 'success',
+      prNumber: pr.number,
+      prUrl: pr.url,
+      branch,
+    }
+  } catch (e) {
+    if (branchCreated) {
+      try {
+        await deps.github.deleteBranch(branch)
+      } catch (cleanupErr) {
+        console.error('[apply] orphan branch left behind', {
+          branch,
+          cleanupErr,
+        })
+      }
+    }
+    return {
+      kind: 'failed',
+      code: 'GitHubApiError',
+      message: e instanceof Error ? e.message : String(e),
+    }
+  }
+}
