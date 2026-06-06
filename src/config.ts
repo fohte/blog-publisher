@@ -102,7 +102,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     octoSts: {
       url: req(env, 'OCTO_STS_URL'),
       scope: req(env, 'OCTO_STS_SCOPE'),
-      identity: opt(env, 'OCTO_STS_IDENTITY') ?? 'fohte.net-blog-publisher',
+      identity: req(env, 'OCTO_STS_IDENTITY'),
       saTokenPath:
         opt(env, 'OCTO_STS_SA_TOKEN_PATH') ??
         '/var/run/secrets/tokens/octo-sts-token',

@@ -273,8 +273,9 @@ describe('OctoStsTokenCacheImpl.getToken', () => {
         expires_at: new Date(1_700_000_000_000 + 60 * 60 * 1000).toISOString(),
       }),
     )
-    await p
-    // Cache must not have been populated by the in-flight result.
+    // The in-flight caller must also receive the post-invalidate token,
+    // not the stale value returned by the original exchange.
+    expect(await p).toBe('after-invalidate')
     expect(await cache.getToken()).toBe('after-invalidate')
     expect(fetchMock).toHaveBeenCalledTimes(2)
   })

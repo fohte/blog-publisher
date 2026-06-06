@@ -48,8 +48,9 @@ interface CachedToken {
 }
 
 export class OctoStsTokenCacheImpl implements OctoStsTokenCache {
-  private readonly config: Required<Pick<OctoStsConfig, 'safetyMarginMs'>> &
-    OctoStsConfig
+  private readonly config: Omit<OctoStsConfig, 'safetyMarginMs'> & {
+    safetyMarginMs: number
+  }
   private readonly fetchImpl: typeof fetch
   private readonly readFileImpl: (path: string) => Promise<string>
   private readonly nowImpl: () => number
@@ -98,10 +99,13 @@ export class OctoStsTokenCacheImpl implements OctoStsTokenCache {
     }
     const gen = this.generation
     const promise = this.exchangeWithRetry()
-      .then((entry) => {
-        if (this.generation === gen) {
-          this.cached = entry
+      .then((entry): string | Promise<string> => {
+        if (this.generation !== gen) {
+          // Invalidated mid-flight: the caller has already declared this
+          // token stale, so re-exchange instead of handing it back.
+          return this.getToken()
         }
+        this.cached = entry
         return entry.token
       })
       .finally(() => {

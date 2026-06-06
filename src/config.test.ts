@@ -13,6 +13,7 @@ function baseEnv(): Record<string, string> {
     GITHUB_REPO: 'fohte.net',
     OCTO_STS_URL: 'https://octo-sts.fohte.net',
     OCTO_STS_SCOPE: 'fohte/fohte.net',
+    OCTO_STS_IDENTITY: 'fohte.net-blog-publisher',
     R2_BUCKET: 'b',
     R2_PUBLIC_BASE_URL: 'https://cdn.example',
     R2_ACCOUNT_ID: 'acc',
@@ -45,9 +46,10 @@ describe('loadConfig', () => {
     expect(() => loadConfig(env)).toThrow(/OCTO_STS_URL/)
   })
 
-  it('honors OCTO_STS_IDENTITY override', () => {
-    const env = { ...baseEnv(), OCTO_STS_IDENTITY: 'custom-identity' }
-    expect(loadConfig(env).octoSts.identity).toBe('custom-identity')
+  it('throws when OCTO_STS_IDENTITY is missing', () => {
+    const env = baseEnv()
+    delete (env as Record<string, string | undefined>)['OCTO_STS_IDENTITY']
+    expect(() => loadConfig(env)).toThrow(/OCTO_STS_IDENTITY/)
   })
 
   it('parses custom variant widths', () => {
