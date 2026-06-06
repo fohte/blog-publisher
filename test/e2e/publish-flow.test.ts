@@ -76,14 +76,11 @@ async function buildApp(
 
   const githubClient = new GitHubClient(
     {
-      appId: 1,
-      privateKey: 'irrelevant',
-      installationId: 1,
       owner: 'fohte',
       repo: 'fohte.net',
       defaultBranch: 'master',
     },
-    { request: github.request },
+    { octokit: { request: github.request } },
   )
 
   const s3 = makeS3Client(ep)

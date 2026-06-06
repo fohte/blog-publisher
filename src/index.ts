@@ -5,6 +5,7 @@ import { GitHubClient } from '@/adapters/github-client'
 import { ImageProcessor } from '@/adapters/image-processor'
 import { LiveSyncAdapter } from '@/adapters/livesync'
 import { createApp } from '@/app'
+import { OctoStsTokenCacheImpl } from '@/auth/octo-sts'
 import { loadConfig } from '@/config'
 
 async function main(): Promise<void> {
@@ -21,14 +22,21 @@ async function main(): Promise<void> {
       : {}),
   })
 
-  const github = new GitHubClient({
-    appId: config.github.appId,
-    privateKey: config.github.privateKey,
-    installationId: config.github.installationId,
-    owner: config.github.owner,
-    repo: config.github.repo,
-    defaultBranch: config.github.defaultBranch,
+  const tokenCache = new OctoStsTokenCacheImpl({
+    url: config.octoSts.url,
+    scope: config.octoSts.scope,
+    identity: config.octoSts.identity,
+    saTokenPath: config.octoSts.saTokenPath,
   })
+
+  const github = new GitHubClient(
+    {
+      owner: config.github.owner,
+      repo: config.github.repo,
+      defaultBranch: config.github.defaultBranch,
+    },
+    { tokenCache },
+  )
 
   const s3 = new S3Client({
     region: 'auto',

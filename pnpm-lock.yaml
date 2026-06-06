@@ -20,9 +20,6 @@ importers:
       '@hono/zod-openapi':
         specifier: 1.4.0
         version: 1.4.0(hono@4.12.23)(zod@4.4.3)
-      '@octokit/auth-app':
-        specifier: 8.2.0
-        version: 8.2.0
       '@octokit/plugin-throttling':
         specifier: 11.0.3
         version: 11.0.3(@octokit/core@7.0.6)
