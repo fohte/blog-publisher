@@ -20,7 +20,7 @@ CouchDB must be reachable from the Service over plain HTTP within the private ne
 
 ## GitHub App setup
 
-Create a dedicated GitHub App so the Service can authenticate per-installation. The Service never holds the App Private Key directly: it exchanges a Pod ServiceAccount token at `octo-sts.fohte.net` for a short-lived (1 h) installation token.
+Create a dedicated GitHub App so the Service can authenticate per-installation. The Service never holds the App Private Key directly: it exchanges an OIDC token at `octo-sts.fohte.net` for a short-lived (1 h) installation token.
 
 1. **App permissions** — Repository permissions only:
    - Contents: **Write** (blob / tree / commit / ref operations)
@@ -28,13 +28,13 @@ Create a dedicated GitHub App so the Service can authenticate per-installation. 
    - Metadata: **Read** (auto-granted)
 2. **Installation target**: install the App on `fohte/fohte.net` **only**. Do not install at the organization level.
 3. **Webhooks**: disabled. The Service polls CI state via the REST API.
-4. The App Private Key is held by the octo-sts deployment, not by this Service. Trust policy lives at `fohte/.github/.github/chainguard/fohte.net-blog-publisher.sts.yaml` and binds the K8s ServiceAccount `system:serviceaccount:blog-publisher:blog-publisher` to the `fohte/fohte.net` scope.
+4. The App Private Key is held by the octo-sts deployment, not by this Service. The trust policy at `fohte/.github/.github/chainguard/fohte.net-blog-publisher.sts.yaml` decides which identity may exchange for the `fohte/fohte.net` scope.
 
 Initial rollout can point at a fork or a `test/blog-publish-dry` branch for dry-runs by overriding `GITHUB_REPO` and `GITHUB_DEFAULT_BRANCH` (and the matching octo-sts trust policy scope).
 
 ## octo-sts setup
 
-The Service expects the Pod manifest to mount a projected ServiceAccount token at the path given by `OCTO_STS_SA_TOKEN_PATH` (default `/var/run/secrets/tokens/octo-sts-token`) with `audience: octo-sts.fohte.net`. kubelet auto-rewrites the token before expiry, so the Service simply `fs.readFile`s it on every exchange.
+The deployment must keep a valid OIDC token (audience `octo-sts.fohte.net`, subject matching the trust policy identity) at the path given by `OCTO_STS_SA_TOKEN_PATH`. The Service re-reads the file on every exchange, so an out-of-band rotation that overwrites the file in place is enough — no restart required.
 
 The installation token is cached in memory with a 5-minute safety margin; concurrent requests share a single in-flight exchange. On a 401 from GitHub (clock skew etc.) the client invalidates the cache and retries the request once.
 
