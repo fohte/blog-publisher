@@ -30,6 +30,7 @@ interface ExchangeResponse {
 
 const DEFAULT_SAFETY_MARGIN_MS = 5 * 60 * 1000
 const RETRY_BACKOFF_MS = 500
+const EXCHANGE_TIMEOUT_MS = 10_000
 
 export class OctoStsAuthError extends Error {
   readonly status: number | undefined
@@ -138,6 +139,14 @@ export class OctoStsTokenCacheImpl implements OctoStsTokenCache {
 
   private async exchange(): Promise<CachedToken> {
     const saToken = (await this.readFileImpl(this.config.saTokenPath)).trim()
+    if (saToken === '') {
+      // Status 400 marks this as a client-config issue so exchangeWithRetry
+      // does not retry — an empty token file is never transient.
+      throw new OctoStsAuthError(
+        `octo-sts exchange aborted: SA token at ${this.config.saTokenPath} is empty`,
+        400,
+      )
+    }
     const url = new URL('/sts/exchange', this.config.url)
     url.searchParams.set('scope', this.config.scope)
     url.searchParams.set('identity', this.config.identity)
@@ -150,6 +159,7 @@ export class OctoStsTokenCacheImpl implements OctoStsTokenCache {
           authorization: `Bearer ${saToken}`,
           accept: 'application/json',
         },
+        signal: AbortSignal.timeout(EXCHANGE_TIMEOUT_MS),
       })
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : String(cause)

@@ -231,6 +231,28 @@ describe('OctoStsTokenCacheImpl.getToken', () => {
     expect(readFileMock).toHaveBeenCalledWith(BASE_CONFIG.saTokenPath)
   })
 
+  it('throws OctoStsAuthError when the SA token file is empty', async () => {
+    const { deps, fetchMock, readFileMock } = makeDeps()
+    readFileMock.mockResolvedValueOnce('   \n')
+    const cache = new OctoStsTokenCacheImpl(BASE_CONFIG, deps)
+    await expect(cache.getToken()).rejects.toThrow(/SA token at .* is empty/)
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('passes an AbortSignal to fetch for the exchange timeout', async () => {
+    const { deps, fetchMock } = makeDeps()
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse(200, {
+        token: 'tok',
+        expires_at: new Date(1_700_000_000_000 + 60 * 60 * 1000).toISOString(),
+      }),
+    )
+    const cache = new OctoStsTokenCacheImpl(BASE_CONFIG, deps)
+    await cache.getToken()
+    const init = fetchMock.mock.calls[0]?.[1] as RequestInit
+    expect(init.signal).toBeInstanceOf(AbortSignal)
+  })
+
   it('invalidate(token) is a no-op when the cached token differs', async () => {
     const { deps, fetchMock } = makeDeps()
     fetchMock.mockResolvedValueOnce(
