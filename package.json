@@ -38,7 +38,6 @@
     "@fohte/blog-publisher-contract": "0.1.0",
     "@hono/node-server": "2.0.4",
     "@hono/zod-openapi": "1.4.0",
-    "@octokit/auth-app": "8.2.0",
     "@octokit/plugin-throttling": "11.0.3",
     "gray-matter": "4.0.3",
     "hono": "4.12.23",

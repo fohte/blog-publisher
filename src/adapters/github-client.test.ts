@@ -1,6 +1,10 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { GitHubClient } from '@/adapters/github-client'
+import {
+  createOctoStsAuthStrategy,
+  GitHubClient,
+} from '@/adapters/github-client'
+import type { OctoStsTokenCache } from '@/auth/octo-sts'
 
 interface RecordedCall {
   route: string
@@ -40,9 +44,6 @@ function makeOctokitMock(
 }
 
 const baseConfig = {
-  appId: 1,
-  privateKey: 'KEY',
-  installationId: 1,
   owner: 'fohte',
   repo: 'fohte.net',
   defaultBranch: 'master',
@@ -65,7 +66,7 @@ describe('GitHubClient.commitFiles', () => {
         object: { sha: 'COMMIT' },
       }),
     })
-    const client = new GitHubClient(baseConfig, octokit)
+    const client = new GitHubClient(baseConfig, { octokit })
     const result = await client.commitFiles(
       'blog/abc',
       [
@@ -106,7 +107,7 @@ describe('GitHubClient.createPullRequest', () => {
         { name: 'blog-publish' },
       ],
     })
-    const client = new GitHubClient(baseConfig, octokit)
+    const client = new GitHubClient(baseConfig, { octokit })
     const pr = await client.createPullRequest('blog/abc', 't', 'b')
     expect(pr.number).toBe(42)
     const created = calls.find(
@@ -123,7 +124,7 @@ describe('GitHubClient.existsOnFohteNet', () => {
     const { octokit } = makeOctokitMock({
       'GET /repos/{owner}/{repo}/contents/{path}': () => ({ name: 'x.mdx' }),
     })
-    const client = new GitHubClient(baseConfig, octokit)
+    const client = new GitHubClient(baseConfig, { octokit })
     expect(await client.existsOnFohteNet('2025-01-01-x.mdx')).toBe(true)
   })
 
@@ -134,7 +135,7 @@ describe('GitHubClient.existsOnFohteNet', () => {
         throw err
       },
     })
-    const client = new GitHubClient(baseConfig, octokit)
+    const client = new GitHubClient(baseConfig, { octokit })
     expect(await client.existsOnFohteNet('missing.mdx')).toBe(false)
   })
 })
@@ -162,7 +163,7 @@ describe('GitHubClient.resolveCiStatus', () => {
       }),
       'GET /repos/{owner}/{repo}/deployments': () => [],
     })
-    const client = new GitHubClient(baseConfig, octokit)
+    const client = new GitHubClient(baseConfig, { octokit })
     const ci = await client.resolveCiStatus(42)
     expect(ci.state).toBe('success')
     expect(ci.failedChecks).toEqual([])
@@ -180,7 +181,7 @@ describe('GitHubClient.resolveCiStatus', () => {
       }),
       'GET /repos/{owner}/{repo}/deployments': () => [],
     })
-    const client = new GitHubClient(baseConfig, octokit)
+    const client = new GitHubClient(baseConfig, { octokit })
     const ci = await client.resolveCiStatus(42)
     expect(ci.state).toBe('failure')
     expect(ci.failedChecks).toEqual(['test'])
@@ -195,7 +196,7 @@ describe('GitHubClient.resolveCiStatus', () => {
       }),
       'GET /repos/{owner}/{repo}/deployments': () => [],
     })
-    const client = new GitHubClient(baseConfig, octokit)
+    const client = new GitHubClient(baseConfig, { octokit })
     const ci = await client.resolveCiStatus(42)
     expect(ci.state).toBe('pending')
   })
@@ -216,8 +217,95 @@ describe('GitHubClient.resolveCiStatus', () => {
         { state: 'success', environment_url: 'https://preview.example.com' },
       ],
     })
-    const client = new GitHubClient(baseConfig, octokit)
+    const client = new GitHubClient(baseConfig, { octokit })
     const ci = await client.resolveCiStatus(42)
     expect(ci.previewUrl).toBe('https://preview.example.com')
+  })
+})
+
+describe('createOctoStsAuthStrategy', () => {
+  beforeEach(() => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+  })
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  function makeCache(tokens: string[]): OctoStsTokenCache & {
+    invalidated: string[]
+  } {
+    const stream = [...tokens]
+    const invalidated: string[] = []
+    return {
+      getToken: vi.fn(async () => {
+        const t = stream.shift()
+        if (t === undefined) throw new Error('no more tokens')
+        return t
+      }),
+      invalidate: vi.fn((token?: string) => {
+        invalidated.push(token ?? '<none>')
+      }),
+      invalidated,
+    }
+  }
+
+  it('injects token as authorization header on every request', async () => {
+    const cache = makeCache(['tok-1'])
+    const { hook } = createOctoStsAuthStrategy(cache)()
+    const request = vi.fn(async () => ({ data: 'ok' }))
+    await hook(request, 'GET /x', { foo: 1, headers: { 'x-y': 'z' } })
+    expect(request).toHaveBeenCalledWith('GET /x', {
+      foo: 1,
+      headers: { 'x-y': 'z', authorization: 'token tok-1' },
+    })
+  })
+
+  it('on 401 invalidates cache and retries once with a fresh token', async () => {
+    const cache = makeCache(['stale', 'fresh'])
+    const { hook } = createOctoStsAuthStrategy(cache)()
+    let calls = 0
+    const request = vi.fn(
+      async (_route: string, params: Record<string, unknown>) => {
+        calls += 1
+        if (calls === 1) {
+          const err = Object.assign(new Error('unauthorized'), { status: 401 })
+          throw err
+        }
+        const headers = params['headers'] as Record<string, string>
+        return { data: 'ok', sentAuth: headers['authorization'] }
+      },
+    )
+    const res = (await hook(request, 'GET /x', {})) as {
+      data: string
+      sentAuth: string
+    }
+    expect(res.data).toBe('ok')
+    expect(res.sentAuth).toBe('token fresh')
+    expect(cache.invalidated).toEqual(['stale'])
+    expect(request).toHaveBeenCalledTimes(2)
+  })
+
+  it('does not retry on non-401 errors', async () => {
+    const cache = makeCache(['tok'])
+    const { hook } = createOctoStsAuthStrategy(cache)()
+    const request = vi.fn(async () => {
+      const err = Object.assign(new Error('boom'), { status: 500 })
+      throw err
+    })
+    await expect(hook(request, 'GET /x', {})).rejects.toMatchObject({
+      status: 500,
+    })
+    expect(cache.invalidated).toEqual([])
+    expect(request).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not crash when request throws null', async () => {
+    const cache = makeCache(['tok'])
+    const { hook } = createOctoStsAuthStrategy(cache)()
+    const request = vi.fn(async () => {
+      throw null
+    })
+    await expect(hook(request, 'GET /x', {})).rejects.toBeNull()
+    expect(cache.invalidated).toEqual([])
   })
 })

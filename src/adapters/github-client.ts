@@ -1,7 +1,8 @@
 import type { BlogPrSummary, CiStatus } from '@fohte/blog-publisher-contract'
-import { createAppAuth } from '@octokit/auth-app'
 import { throttling } from '@octokit/plugin-throttling'
 import { Octokit } from 'octokit'
+
+import type { OctoStsTokenCache } from '@/auth/octo-sts'
 
 export interface FileToCommit {
   path: string
@@ -9,10 +10,7 @@ export interface FileToCommit {
   encoding: 'utf-8' | 'base64'
 }
 
-export interface GitHubAppConfig {
-  appId: string | number
-  privateKey: string
-  installationId: number
+export interface GitHubClientConfig {
   owner: string
   repo: string
   defaultBranch: string
@@ -68,6 +66,45 @@ interface PullResponse {
   head: { ref: string; sha: string }
 }
 
+function isUnauthorized(err: unknown): boolean {
+  if (typeof err !== 'object' || err === null) return false
+  return 'status' in err && err.status === 401
+}
+
+export function createOctoStsAuthStrategy(tokenCache: OctoStsTokenCache) {
+  return () => ({
+    hook: async (
+      request: (
+        route: string,
+        parameters: Record<string, unknown>,
+      ) => Promise<unknown>,
+      route: string,
+      parameters: Record<string, unknown> = {},
+    ): Promise<unknown> => {
+      const send = async (token: string): Promise<unknown> => {
+        const headers = {
+          ...((parameters['headers'] as Record<string, string> | undefined) ??
+            {}),
+          authorization: `token ${token}`,
+        }
+        return request(route, { ...parameters, headers })
+      }
+      const token = await tokenCache.getToken()
+      try {
+        return await send(token)
+      } catch (err) {
+        if (!isUnauthorized(err)) throw err
+        console.warn('[github-client] octo-sts token rejected (401); rotating')
+        // Pass the token we just used so a sibling request that already
+        // rotated the cache to a newer token is not invalidated.
+        tokenCache.invalidate(token)
+        const fresh = await tokenCache.getToken()
+        return send(fresh)
+      }
+    },
+  })
+}
+
 export class GitHubClient {
   private readonly octokit: OctokitLike
   private readonly owner: string
@@ -75,21 +112,19 @@ export class GitHubClient {
   private readonly defaultBranch: string
   private readonly label: string
 
-  constructor(config: GitHubAppConfig, octokitOverride?: OctokitLike) {
+  constructor(
+    config: GitHubClientConfig,
+    deps: { tokenCache: OctoStsTokenCache } | { octokit: OctokitLike },
+  ) {
     this.owner = config.owner
     this.repo = config.repo
     this.defaultBranch = config.defaultBranch
     this.label = config.prLabel ?? 'blog-publish'
-    if (octokitOverride !== undefined) {
-      this.octokit = octokitOverride
+    if ('octokit' in deps) {
+      this.octokit = deps.octokit
     } else {
       this.octokit = new ThrottledOctokit({
-        authStrategy: createAppAuth,
-        auth: {
-          appId: config.appId,
-          privateKey: config.privateKey,
-          installationId: config.installationId,
-        },
+        authStrategy: createOctoStsAuthStrategy(deps.tokenCache),
         throttle: {
           onRateLimit: () => true,
           onSecondaryRateLimit: () => true,

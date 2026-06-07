@@ -10,12 +10,15 @@ export interface Config {
     passphrase?: string
   }
   github: {
-    appId: string
-    privateKey: string
-    installationId: number
     owner: string
     repo: string
     defaultBranch: string
+  }
+  octoSts: {
+    url: string
+    scope: string
+    identity: string
+    saTokenPath: string
   }
   r2: {
     bucket: string
@@ -45,17 +48,6 @@ function req(env: NodeJS.ProcessEnv, key: string): string {
 function opt(env: NodeJS.ProcessEnv, key: string): string | undefined {
   const v = env[key]
   return v === undefined || v === '' ? undefined : v
-}
-
-function reqInt(env: NodeJS.ProcessEnv, key: string): number {
-  const raw = req(env, key)
-  const n = Number.parseInt(raw, 10)
-  if (Number.isNaN(n)) {
-    throw new ConfigError(
-      `environment variable ${key} must be an integer: ${raw}`,
-    )
-  }
-  return n
 }
 
 function parseWidths(raw: string): number[] {
@@ -103,12 +95,17 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
       }
     })(),
     github: {
-      appId: req(env, 'GITHUB_APP_ID'),
-      privateKey: req(env, 'GITHUB_APP_PRIVATE_KEY'),
-      installationId: reqInt(env, 'GITHUB_APP_INSTALLATION_ID'),
       owner: req(env, 'GITHUB_OWNER'),
       repo: req(env, 'GITHUB_REPO'),
       defaultBranch: opt(env, 'GITHUB_DEFAULT_BRANCH') ?? 'master',
+    },
+    octoSts: {
+      url: req(env, 'OCTO_STS_URL'),
+      scope: req(env, 'OCTO_STS_SCOPE'),
+      identity: req(env, 'OCTO_STS_IDENTITY'),
+      saTokenPath:
+        opt(env, 'OCTO_STS_SA_TOKEN_PATH') ??
+        '/var/run/secrets/tokens/octo-sts-token',
     },
     r2: {
       bucket: req(env, 'R2_BUCKET'),
