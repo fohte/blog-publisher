@@ -26,13 +26,12 @@
     "@types/js-yaml": "4.0.9",
     "@types/mdast": "4.0.4",
     "@types/node": "24.12.4",
-<<<<<<< before updating
     "@types/unist": "3.0.3",
-    "concurrently": "9.2.1",
-    "eslint": "10.4.0",
+    "concurrently": "10.0.0",
+    "eslint": "10.4.1",
     "prettier": "3.8.3",
     "typescript": "6.0.3",
-    "vitest": "4.1.6"
+    "vitest": "4.1.7"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.1060.0",
@@ -57,12 +56,5 @@
     "unified": "11.0.5",
     "unist-util-visit": "5.1.0",
     "zod": "4.4.3"
-=======
-    "concurrently": "10.0.0",
-    "eslint": "10.4.1",
-    "prettier": "3.8.3",
-    "typescript": "6.0.3",
-    "vitest": "4.1.7"
->>>>>>> after updating
   }
 }

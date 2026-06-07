@@ -9,4 +9,13 @@ allowBuilds:
 # Dodge short-lived supply-chain attacks (e.g. shai-hulud, tinycolor) by
 # holding off freshly published versions. Unit is minutes; 10080 = 7 days.
 minimumReleaseAge: 10080
-minimumReleaseAgeExclude: []
+minimumReleaseAgeExclude:
+  - '@aws-sdk/*'
+  - '@smithy/*'
+  - '@typescript-eslint/*'
+  - '@fohte/*'
+  - js-yaml
+  - obug
+  - openapi3-ts
+  - semver
+  - vite
