@@ -20,18 +20,18 @@
   "devDependencies": {
     "@commitlint/cli": "21.0.2",
     "@eslint/eslintrc": "3.3.5",
-    "@fohte/eslint-config": "0.3.2",
+    "@fohte/eslint-config": "0.3.3",
     "@tsconfig/node-lts": "24.0.0",
     "@tsconfig/strictest": "2.0.8",
     "@types/js-yaml": "4.0.9",
     "@types/mdast": "4.0.4",
     "@types/node": "24.12.4",
     "@types/unist": "3.0.3",
-    "concurrently": "10.0.0",
+    "concurrently": "10.0.3",
     "eslint": "10.4.1",
     "prettier": "3.8.3",
     "typescript": "6.0.3",
-    "vitest": "4.1.7"
+    "vitest": "4.1.8"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.1057.0",
