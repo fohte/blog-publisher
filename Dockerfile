@@ -10,7 +10,9 @@ RUN npm install -g corepack@0.35.0 && npm cache clean --force && corepack enable
 WORKDIR /app
 
 FROM base AS deps
-COPY package.json pnpm-lock.yaml ./
+# pnpm-workspace.yaml holds `allowBuilds`; without it install fails with
+# ERR_PNPM_IGNORED_BUILDS on sharp/esbuild/unrs-resolver.
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile
 
 FROM base AS runtime
