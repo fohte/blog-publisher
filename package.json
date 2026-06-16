@@ -40,7 +40,7 @@
     "@hono/zod-openapi": "1.4.0",
     "@octokit/plugin-throttling": "11.0.3",
     "gray-matter": "4.0.3",
-    "hono": "4.12.24",
+    "hono": "4.12.25",
     "js-yaml": "4.2.0",
     "mdast-util-from-markdown": "2.0.3",
     "mdast-util-mdx-jsx": "3.2.0",
