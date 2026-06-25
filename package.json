@@ -1,7 +1,11 @@
 {
   "name": "blog-publisher",
   "private": true,
+<<<<<<< before updating
   "packageManager": "pnpm@11.5.3",
+=======
+  "packageManager": "pnpm@11.7.0",
+>>>>>>> after updating
   "type": "module",
   "scripts": {
     "start": "tsx src/index.ts",
@@ -23,14 +27,19 @@
     "@fohte/eslint-config": "0.3.4",
     "@tsconfig/node-lts": "24.0.0",
     "@tsconfig/strictest": "2.0.8",
+<<<<<<< before updating
     "@types/js-yaml": "4.0.9",
     "@types/mdast": "4.0.4",
     "@types/node": "24.13.1",
     "@types/unist": "3.0.3",
+=======
+    "@types/node": "24.13.2",
+>>>>>>> after updating
     "concurrently": "10.0.3",
-    "eslint": "10.4.1",
-    "prettier": "3.8.3",
+    "eslint": "10.5.0",
+    "prettier": "3.8.4",
     "typescript": "6.0.3",
+<<<<<<< before updating
     "vitest": "4.1.8"
   },
   "dependencies": {
@@ -56,5 +65,8 @@
     "unified": "11.0.5",
     "unist-util-visit": "5.1.0",
     "zod": "4.4.3"
+=======
+    "vitest": "4.1.9"
+>>>>>>> after updating
   }
 }
