@@ -1,10 +1,11 @@
 # Changes here will be overwritten by Copier
-_commit: v0.8.4
+_commit: v0.8.11
 _src_path: https://github.com/fohte/generic-boilerplate
 description:
   "@fohte's personal service for publishing Obsidian notes to fohte.net
   as pull requests"
 is_public: true
+is_web_app: false
 project_name: blog-publisher
 repo_language: en
 subpackages: []
