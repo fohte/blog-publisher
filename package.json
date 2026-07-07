@@ -1,7 +1,7 @@
 {
   "name": "blog-publisher",
   "private": true,
-  "packageManager": "pnpm@11.7.0",
+  "packageManager": "pnpm@11.9.0",
   "type": "module",
   "scripts": {
     "start": "tsx src/index.ts",
@@ -18,9 +18,9 @@
     "e2e:down": "docker compose -f docker-compose.e2e.yml down -v"
   },
   "devDependencies": {
-    "@commitlint/cli": "21.0.2",
+    "@commitlint/cli": "21.1.0",
     "@eslint/eslintrc": "3.3.5",
-    "@fohte/eslint-config": "0.3.4",
+    "@fohte/eslint-config": "0.3.5",
     "@tsconfig/node-lts": "24.0.0",
     "@tsconfig/strictest": "2.0.8",
     "@types/js-yaml": "4.0.9",
@@ -28,8 +28,8 @@
     "@types/node": "24.13.2",
     "@types/unist": "3.0.3",
     "concurrently": "10.0.3",
-    "eslint": "10.5.0",
-    "prettier": "3.8.4",
+    "eslint": "10.6.0",
+    "prettier": "3.9.4",
     "typescript": "6.0.3",
     "vitest": "4.1.9"
   },
