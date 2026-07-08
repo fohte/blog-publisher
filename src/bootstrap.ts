@@ -5,8 +5,10 @@
 import {
   initObservability,
   isObservabilityConfigured,
+  type ObservabilityHandle,
 } from '@fohte/service-kit/observability'
 
-if (isObservabilityConfigured(process.env)) {
-  initObservability(process.env)
-}
+export const observability: ObservabilityHandle | undefined =
+  isObservabilityConfigured(process.env)
+    ? initObservability(process.env)
+    : undefined
