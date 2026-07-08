@@ -1,3 +1,5 @@
+import '@/bootstrap'
+
 import { S3Client } from '@aws-sdk/client-s3'
 import { serve } from '@hono/node-server'
 
