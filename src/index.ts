@@ -1,3 +1,8 @@
+// Must load before any instrumented module is imported below, so it cannot
+// sit in the sorted @/ import group.
+// eslint-disable-next-line simple-import-sort/imports -- must stay first
+import { observability } from '@/bootstrap'
+
 import { S3Client } from '@aws-sdk/client-s3'
 import { serve } from '@hono/node-server'
 
@@ -80,7 +85,9 @@ async function main(): Promise<void> {
   process.on('SIGTERM', () => {
     console.log('SIGTERM received, shutting down')
     server.close(() => {
-      process.exit(0)
+      void (observability?.shutdown() ?? Promise.resolve()).finally(() => {
+        process.exit(0)
+      })
     })
   })
 }

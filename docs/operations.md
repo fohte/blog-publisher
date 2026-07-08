@@ -52,7 +52,7 @@ The blog publisher rides on top of the shared slack-bot core (separate repo). Th
 
 ## Configuration template
 
-`.env.example` at the repo root mirrors the variables the Service reads through `src/config.ts`. Operators should split them between non-secret config and a secret store as follows.
+`.env.example` at the repo root mirrors the variables the Service reads through `src/config.ts`, plus the observability variables below (read directly from `process.env` by `src/bootstrap.ts`). Operators should split them between non-secret config and a secret store as follows.
 
 ### Non-secret config
 
@@ -86,6 +86,19 @@ The blog publisher rides on top of the shared slack-bot core (separate repo). Th
 | `R2_SECRET_ACCESS_KEY` | Paired with `R2_ACCESS_KEY_ID`.              |
 
 Rotation: `BEARER_TOKEN` requires updating the secret on both the Service side and the slack-bot side at the same time.
+
+### Observability (optional)
+
+| Key                           | Notes                                                                    |
+| ----------------------------- | ------------------------------------------------------------------------ |
+| `SENTRY_DSN`                  | Enables Sentry error reporting when set.                                 |
+| `SENTRY_ENVIRONMENT`          | Sentry environment tag, e.g. `production`.                               |
+| `SENTRY_RELEASE`              | Sentry release tag, e.g. the deployed image digest.                      |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | OTLP collector URL. Enables tracing when set.                            |
+| `OTEL_EXPORTER_OTLP_HEADERS`  | Comma-separated `key=value` auth headers for the OTLP collector, if any. |
+| `OTEL_SERVICE_NAME`           | Overrides the resource `service.name` reported to the collector.         |
+
+Leaving all of these unset disables observability entirely; the Service starts and runs normally.
 
 ## Manual smoke checks
 
