@@ -18,8 +18,8 @@ RUN pnpm install --frozen-lockfile
 FROM base AS runtime
 ENV NODE_ENV=production
 COPY --from=deps --chown=node:node /app/node_modules ./node_modules
-COPY --chown=node:node package.json tsconfig.json ./
+COPY --chown=node:node package.json tsconfig.json otel-register.mjs ./
 COPY --chown=node:node src ./src
 USER node
 EXPOSE 3000
-CMD ["./node_modules/.bin/tsx", "src/index.ts"]
+CMD ["./node_modules/.bin/tsx", "--import", "./otel-register.mjs", "src/index.ts"]
