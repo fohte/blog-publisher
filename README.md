@@ -19,7 +19,7 @@ For deployment-time setup (LiveSync settings, GitHub App permissions, Slack App 
 
 ```sh
 pnpm install
-pnpm dev      # tsx watch src/index.ts
+pnpm dev      # tsx watch --import ./otel-register.mjs src/index.ts
 pnpm test     # type-check + unit tests
 pnpm lint
 ```
