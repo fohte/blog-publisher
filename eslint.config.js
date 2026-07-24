@@ -1,7 +1,23 @@
 import { config } from '@fohte/eslint-config'
 
+// The only place throw/try-catch and unhandled neverthrow Results are
+// allowed: bridges to external SDKs/frameworks (Octokit, sharp, the AWS SDK,
+// fetch, Hono) and process bootstrap that must fail fast.
+const INTEROP_BOUNDARY_FILES = [
+  'src/adapters/**/*.ts',
+  'src/auth/octo-sts.ts',
+  'src/app.ts',
+  'src/config.ts',
+  'src/bootstrap.ts',
+  'src/index.ts',
+  'test/e2e/**/*.ts',
+]
+
 export default config(
-  { typescript: { typeChecked: true } },
+  {
+    typescript: { typeChecked: true },
+    errorHandling: { interopBoundaryFiles: INTEROP_BOUNDARY_FILES },
+  },
   {
     rules: {
       'no-restricted-imports': [

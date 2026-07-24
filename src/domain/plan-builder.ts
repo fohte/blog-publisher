@@ -82,21 +82,16 @@ export async function buildPlan(
       if (note === null) {
         return { docId, note: null }
       }
-      try {
-        const { frontmatter, body } = parseFrontmatter(note.content)
-        const slug = deriveSlug(frontmatter) ?? ''
-        let publishedFilename = ''
-        try {
-          publishedFilename = generatePublishedFilename(frontmatter, {
-            applyTime,
-          })
-        } catch {
-          publishedFilename = ''
-        }
-        return { docId, note, frontmatter, body, slug, publishedFilename }
-      } catch {
+      const parsed = parseFrontmatter(note.content)
+      if (parsed.isErr()) {
         return { docId, note, parseFailed: true }
       }
+      const { frontmatter, body } = parsed.value
+      const slug = deriveSlug(frontmatter) ?? ''
+      const publishedFilename = generatePublishedFilename(frontmatter, {
+        applyTime,
+      }).unwrapOr('')
+      return { docId, note, frontmatter, body, slug, publishedFilename }
     }),
   )
 
