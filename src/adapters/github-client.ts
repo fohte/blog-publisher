@@ -1,8 +1,20 @@
 import type { BlogPrSummary, CiStatus } from '@fohte/blog-publisher-contract'
+import { captureWithFingerprint } from '@fohte/service-kit/observability'
 import { throttling } from '@octokit/plugin-throttling'
 import { Octokit } from 'octokit'
 
 import type { OctoStsTokenCache } from '@/auth/octo-sts'
+
+const GITHUB_API_FINGERPRINT = 'adapters.github-client.api-error'
+const CI_DEPLOYMENT_LOOKUP_FINGERPRINT =
+  'adapters.github-client.ci-deployment-lookup-failed'
+
+export class GitHubApiError extends Error {
+  constructor(message: string, cause: unknown) {
+    super(message, { cause })
+    this.name = 'GitHubApiError'
+  }
+}
 
 export interface FileToCommit {
   path: string
@@ -145,7 +157,14 @@ export class GitHubClient {
     } catch (e) {
       const err = e as { status?: number }
       if (err.status === 404) return false
-      throw e
+      const wrapped = new GitHubApiError(
+        `failed to check existence of ${filename} on fohte.net`,
+        e,
+      )
+      captureWithFingerprint(wrapped, GITHUB_API_FINGERPRINT, {
+        extras: { method: 'existsOnFohteNet', filename },
+      })
+      throw wrapped
     }
   }
 
@@ -237,7 +256,12 @@ export class GitHubClient {
       )
     } catch (e) {
       const err = e as { status?: number }
-      if (err.status !== 404 && err.status !== 422) throw e
+      if (err.status === 404 || err.status === 422) return
+      const wrapped = new GitHubApiError(`failed to delete branch ${name}`, e)
+      captureWithFingerprint(wrapped, GITHUB_API_FINGERPRINT, {
+        extras: { method: 'deleteBranch', branch: name },
+      })
+      throw wrapped
     }
   }
 
@@ -417,6 +441,9 @@ export class GitHubClient {
     } catch (e) {
       // Deployment lookup is best-effort; surface the failure so a missing previewUrl is debuggable.
       console.warn('[github-client] deployment lookup failed', e)
+      captureWithFingerprint(e, CI_DEPLOYMENT_LOOKUP_FINGERPRINT, {
+        extras: { method: 'resolveCiStatus', prNumber },
+      })
     }
     return {
       state,

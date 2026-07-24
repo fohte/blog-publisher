@@ -1,5 +1,9 @@
 import { readFile } from 'node:fs/promises'
 
+import { captureWithFingerprint } from '@fohte/service-kit/observability'
+
+const EXCHANGE_FAILED_FINGERPRINT = 'auth.octo-sts.exchange-failed'
+
 export interface OctoStsTokenCache {
   getToken(): Promise<string>
   // Drops the cached token. When `token` is given, drops the cache only if it
@@ -125,6 +129,9 @@ export class OctoStsTokenCacheImpl implements OctoStsTokenCache {
       if (err instanceof OctoStsAuthError) {
         const status = err.status
         if (status !== undefined && status >= 400 && status < 500) {
+          captureWithFingerprint(err, EXCHANGE_FAILED_FINGERPRINT, {
+            extras: { status },
+          })
           throw err
         }
       }

@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
   createOctoStsAuthStrategy,
+  GitHubApiError,
   GitHubClient,
 } from '@/adapters/github-client'
 import type { OctoStsTokenCache } from '@/auth/octo-sts'
@@ -137,6 +138,45 @@ describe('GitHubClient.existsOnFohteNet', () => {
     })
     const client = new GitHubClient(baseConfig, { octokit })
     expect(await client.existsOnFohteNet('missing.mdx')).toBe(false)
+  })
+
+  it('wraps unexpected errors in GitHubApiError', async () => {
+    const { octokit } = makeOctokitMock({
+      'GET /repos/{owner}/{repo}/contents/{path}': () => {
+        const err = Object.assign(new Error('rate limited'), { status: 429 })
+        throw err
+      },
+    })
+    const client = new GitHubClient(baseConfig, { octokit })
+    await expect(
+      client.existsOnFohteNet('2025-01-01-x.mdx'),
+    ).rejects.toBeInstanceOf(GitHubApiError)
+  })
+})
+
+describe('GitHubClient.deleteBranch', () => {
+  it('does not throw when the branch is already gone (404/422)', async () => {
+    const { octokit } = makeOctokitMock({
+      'DELETE /repos/{owner}/{repo}/git/refs/heads/{branch}': () => {
+        const err = Object.assign(new Error('not found'), { status: 404 })
+        throw err
+      },
+    })
+    const client = new GitHubClient(baseConfig, { octokit })
+    await expect(client.deleteBranch('blog/gone')).resolves.toBeUndefined()
+  })
+
+  it('wraps unexpected errors in GitHubApiError', async () => {
+    const { octokit } = makeOctokitMock({
+      'DELETE /repos/{owner}/{repo}/git/refs/heads/{branch}': () => {
+        const err = Object.assign(new Error('rate limited'), { status: 429 })
+        throw err
+      },
+    })
+    const client = new GitHubClient(baseConfig, { octokit })
+    await expect(client.deleteBranch('blog/abc')).rejects.toBeInstanceOf(
+      GitHubApiError,
+    )
   })
 })
 

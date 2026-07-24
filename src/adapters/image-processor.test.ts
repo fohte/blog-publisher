@@ -19,7 +19,11 @@ async function makePng(width: number, height: number): Promise<Buffer> {
 }
 
 function makeMockS3(
-  handlers: { existing?: Set<string>; failOnPut?: string } = {},
+  handlers: {
+    existing?: Set<string>
+    failOnPut?: string
+    failOnHead?: string
+  } = {},
 ): {
   s3: { send: ReturnType<typeof vi.fn> }
   puts: { key: string; ifNoneMatch: string | null }[]
@@ -32,6 +36,12 @@ function makeMockS3(
     if (cmd instanceof HeadObjectCommand) {
       const key = cmd.input.Key ?? ''
       heads.push(key)
+      if (handlers.failOnHead === key) {
+        throw Object.assign(new Error('forbidden'), {
+          name: 'AccessDenied',
+          $metadata: { httpStatusCode: 403 },
+        })
+      }
       if (existing.has(key)) return {}
       const err: { name: string; $metadata: { httpStatusCode: number } } = {
         name: 'NotFound',
@@ -140,6 +150,26 @@ describe('ImageProcessor', () => {
     })
     await expect(
       proc.uploadAll([{ sourcePath: 'a.png', buffer: png }]),
+    ).rejects.toBeInstanceOf(DomainError)
+  })
+
+  it('wraps unexpected HeadObject errors in DomainError', async () => {
+    const png = await makePng(800, 400)
+    const webp = await sharp(png).webp().toBuffer()
+    const { createHash } = await import('node:crypto')
+    const hash = createHash('sha256').update(webp).digest('hex')
+    const baseKey = `images/${hash}.webp`
+    const { s3 } = makeMockS3({ failOnHead: baseKey })
+    const proc = new ImageProcessor({
+      bucket: 'b',
+      publicBaseUrl: 'https://assets.example.com',
+      variantWidths: [],
+      s3: s3 as unknown as ConstructorParameters<
+        typeof ImageProcessor
+      >[0]['s3'],
+    })
+    await expect(
+      proc.diffExisting([{ sourcePath: 'a.png', buffer: png }]),
     ).rejects.toBeInstanceOf(DomainError)
   })
 })
