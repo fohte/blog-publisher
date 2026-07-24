@@ -90,6 +90,26 @@ describe('apply', () => {
     expect(deps.__github.createBranch).not.toHaveBeenCalled()
   })
 
+  it('fails with SlugRequired when frontmatter explicitly clears slug on a non-ASCII title', async () => {
+    // An empty (not undefined) slug skips buildPlan's SlugRequired check
+    // (frontmatter.ts validates on `=== undefined`) but still fails to
+    // derive a filename, so the plan itself has no errors and this note
+    // reaches the file-building step before failing.
+    const n = note(
+      'a',
+      'notes/blogs/a.md',
+      `---\ntitle: 日本語タイトル\ndate: 2026-01-01\ndescription: d\nslug: ''\n---\nbody`,
+    )
+    const deps = makeDeps({ notes: { a: n } })
+    const result = await apply(['a'], deps)
+    expect(result).toEqual({
+      kind: 'failed',
+      code: 'SlugRequired',
+      message: 'cannot derive slug: non-ASCII title without slug',
+    })
+    expect(deps.__github.createBranch).not.toHaveBeenCalled()
+  })
+
   it('alreadyApplied when an open PR exists for the signature', async () => {
     const deps = makeDeps({ notes: { a: ok('a', 'a') } })
     deps.__github.findExistingPrByBranch.mockResolvedValueOnce({

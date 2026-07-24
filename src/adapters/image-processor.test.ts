@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto'
+
 import { HeadObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3'
 import sharp from 'sharp'
 import { describe, expect, it, vi } from 'vitest'
@@ -16,6 +18,12 @@ async function makePng(width: number, height: number): Promise<Buffer> {
   })
     .png()
     .toBuffer()
+}
+
+async function webpKeyFor(png: Buffer): Promise<string> {
+  const webp = await sharp(png).webp().toBuffer()
+  const hash = createHash('sha256').update(webp).digest('hex')
+  return `images/${hash}.webp`
 }
 
 function makeMockS3(
@@ -135,10 +143,7 @@ describe('ImageProcessor', () => {
 
   it('throws ImageUploadFailed on non-412 errors', async () => {
     const png = await makePng(800, 400)
-    const webp = await sharp(png).webp().toBuffer()
-    const { createHash } = await import('node:crypto')
-    const hash = createHash('sha256').update(webp).digest('hex')
-    const baseKey = `images/${hash}.webp`
+    const baseKey = await webpKeyFor(png)
     const { s3 } = makeMockS3({ failOnPut: baseKey })
     const proc = new ImageProcessor({
       bucket: 'b',
@@ -155,10 +160,7 @@ describe('ImageProcessor', () => {
 
   it('wraps unexpected HeadObject errors in DomainError', async () => {
     const png = await makePng(800, 400)
-    const webp = await sharp(png).webp().toBuffer()
-    const { createHash } = await import('node:crypto')
-    const hash = createHash('sha256').update(webp).digest('hex')
-    const baseKey = `images/${hash}.webp`
+    const baseKey = await webpKeyFor(png)
     const { s3 } = makeMockS3({ failOnHead: baseKey })
     const proc = new ImageProcessor({
       bucket: 'b',

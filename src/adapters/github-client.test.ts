@@ -155,16 +155,19 @@ describe('GitHubClient.existsOnFohteNet', () => {
 })
 
 describe('GitHubClient.deleteBranch', () => {
-  it('does not throw when the branch is already gone (404/422)', async () => {
-    const { octokit } = makeOctokitMock({
-      'DELETE /repos/{owner}/{repo}/git/refs/heads/{branch}': () => {
-        const err = Object.assign(new Error('not found'), { status: 404 })
-        throw err
-      },
-    })
-    const client = new GitHubClient(baseConfig, { octokit })
-    await expect(client.deleteBranch('blog/gone')).resolves.toBeUndefined()
-  })
+  it.each([404, 422])(
+    'does not throw when the branch is already gone (status %i)',
+    async (status) => {
+      const { octokit } = makeOctokitMock({
+        'DELETE /repos/{owner}/{repo}/git/refs/heads/{branch}': () => {
+          const err = Object.assign(new Error('not found'), { status })
+          throw err
+        },
+      })
+      const client = new GitHubClient(baseConfig, { octokit })
+      await expect(client.deleteBranch('blog/gone')).resolves.toBeUndefined()
+    },
+  )
 
   it('wraps unexpected errors in GitHubApiError', async () => {
     const { octokit } = makeOctokitMock({

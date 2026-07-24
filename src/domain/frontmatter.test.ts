@@ -23,9 +23,12 @@ describe('parseFrontmatter', () => {
     const error = parseFrontmatter(
       '---\ntitle: : bad\n  - oops\n---\nbody',
     )._unsafeUnwrapErr()
-    expect(error).toBeInstanceOf(DomainError)
-    expect(error.code).toBe('UnsupportedSyntax')
-    expect(error.message).toMatch(/frontmatter/)
+    expect(error).toEqual(
+      new DomainError(
+        'UnsupportedSyntax',
+        'failed to parse frontmatter: bad indentation of a mapping entry (2:8)\n\n 1 | \n 2 | title: : bad\n------------^\n 3 |   - oops',
+      ),
+    )
   })
 
   it('parses full frontmatter', () => {
@@ -162,8 +165,12 @@ describe('generatePublishedFilename', () => {
       { title: '日本語' },
       { applyTime: '2025-01-01T00:00:00Z' },
     )._unsafeUnwrapErr()
-    expect(error).toBeInstanceOf(DomainError)
-    expect(error.code).toBe('SlugRequired')
+    expect(error).toEqual(
+      new DomainError(
+        'SlugRequired',
+        'cannot derive slug: non-ASCII title without slug',
+      ),
+    )
   })
 })
 
