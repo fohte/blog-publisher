@@ -17,4 +17,4 @@ minimumReleaseAgeExclude:
   # Renovate security update: hono@4.12.27
   - hono@4.12.27
   # Renovate security update: @hono/node-server@2.0.10
-  - "@hono/node-server@2.0.10"
+  - '@hono/node-server@2.0.10'
