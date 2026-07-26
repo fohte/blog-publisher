@@ -63,6 +63,7 @@ export class FakeGitHub {
   ): Promise<{ data: unknown; status: number }> => {
     this.requests.push({ route, params })
     if (this.options.failOn?.route === route) {
+      // eslint-disable-next-line no-restricted-syntax -- mimics Octokit's throw-based request contract for the real GitHubClient under test
       throw httpError(this.options.failOn.status, this.options.failOn.message)
     }
 
@@ -72,6 +73,7 @@ export class FakeGitHub {
       if (this.options.existingPosts?.has(filename) === true) {
         return { data: { name: filename }, status: 200 }
       }
+      // eslint-disable-next-line no-restricted-syntax -- mimics Octokit's throw-based request contract for the real GitHubClient under test
       throw httpError(404, 'not found')
     }
 
@@ -89,6 +91,7 @@ export class FakeGitHub {
     if (route === 'GET /repos/{owner}/{repo}/pulls/{pull_number}') {
       const n = Number(params['pull_number'])
       const pr = this.prs.find((p) => p.number === n)
+      // eslint-disable-next-line no-restricted-syntax -- mimics Octokit's throw-based request contract for the real GitHubClient under test
       if (pr === undefined) throw httpError(404, 'not found')
       return { data: pr, status: 200 }
     }
@@ -96,6 +99,7 @@ export class FakeGitHub {
     if (route === 'GET /repos/{owner}/{repo}/git/refs/heads/{branch}') {
       const branch = String(params['branch'])
       const sha = this.branches.get(branch)
+      // eslint-disable-next-line no-restricted-syntax -- mimics Octokit's throw-based request contract for the real GitHubClient under test
       if (sha === undefined) throw httpError(404, 'ref not found')
       return {
         data: { ref: `refs/heads/${branch}`, object: { sha, type: 'commit' } },
@@ -189,6 +193,7 @@ export class FakeGitHub {
     if (route === 'PATCH /repos/{owner}/{repo}/pulls/{pull_number}') {
       const n = Number(params['pull_number'])
       const pr = this.prs.find((p) => p.number === n)
+      // eslint-disable-next-line no-restricted-syntax -- mimics Octokit's throw-based request contract for the real GitHubClient under test
       if (pr === undefined) throw httpError(404, 'not found')
       const state = params['state']
       if (state === 'closed') pr.state = 'closed'
@@ -209,6 +214,7 @@ export class FakeGitHub {
       return { data: [], status: 200 }
     }
 
+    // eslint-disable-next-line no-restricted-syntax -- mimics Octokit's throw-based request contract for the real GitHubClient under test
     throw httpError(500, `fake-github: unhandled route ${route}`)
   }
 }

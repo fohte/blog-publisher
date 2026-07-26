@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import { DomainError } from '@/domain/errors'
 import {
   deriveSlug,
   generatePublishedFilename,
@@ -13,15 +14,21 @@ describe('parseFrontmatter', () => {
   it('parses minimal frontmatter', () => {
     const { frontmatter, body } = parseFrontmatter(
       '---\ntitle: Hello\n---\nbody',
-    )
+    )._unsafeUnwrap()
     expect(frontmatter.title).toBe('Hello')
     expect(body.trim()).toBe('body')
   })
 
-  it('throws DomainError on malformed YAML frontmatter', () => {
-    expect(() =>
-      parseFrontmatter('---\ntitle: : bad\n  - oops\n---\nbody'),
-    ).toThrow(/frontmatter/)
+  it('returns a DomainError on malformed YAML frontmatter', () => {
+    const error = parseFrontmatter(
+      '---\ntitle: : bad\n  - oops\n---\nbody',
+    )._unsafeUnwrapErr()
+    expect(error).toEqual(
+      new DomainError(
+        'UnsupportedSyntax',
+        'failed to parse frontmatter: bad indentation of a mapping entry (2:8)\n\n 1 | \n 2 | title: : bad\n------------^\n 3 |   - oops',
+      ),
+    )
   })
 
   it('parses full frontmatter', () => {
@@ -39,7 +46,7 @@ publishedFilename: 2025-01-02-full-slug.mdx
 draft: false
 ---
 content`
-    const { frontmatter } = parseFrontmatter(src)
+    const { frontmatter } = parseFrontmatter(src)._unsafeUnwrap()
     expect(frontmatter).toMatchObject({
       title: 'Full',
       date: '2025-01-02T03:04:05+09:00',
@@ -122,7 +129,7 @@ describe('generatePublishedFilename', () => {
           publishedFilename: '2024-12-31-old.mdx',
         },
         { applyTime: '2025-01-02T00:00:00Z' },
-      ),
+      )._unsafeUnwrap(),
     ).toBe('2024-12-31-old.mdx')
   })
 
@@ -131,7 +138,7 @@ describe('generatePublishedFilename', () => {
       generatePublishedFilename(
         { title: '日本語', date: '2025-03-04', slug: 'ja-post' },
         { applyTime: '2025-03-04T00:00:00Z' },
-      ),
+      )._unsafeUnwrap(),
     ).toBe('2025-03-04-ja-post.mdx')
   })
 
@@ -140,7 +147,7 @@ describe('generatePublishedFilename', () => {
       generatePublishedFilename(
         { title: 'Hello World', date: '2025-03-04' },
         { applyTime: '2025-03-04T00:00:00Z' },
-      ),
+      )._unsafeUnwrap(),
     ).toBe('2025-03-04-hello-world.mdx')
   })
 
@@ -149,17 +156,21 @@ describe('generatePublishedFilename', () => {
       generatePublishedFilename(
         { title: 'a' },
         { applyTime: '2025-05-06T01:02:03Z' },
-      ),
+      )._unsafeUnwrap(),
     ).toBe('2025-05-06-a.mdx')
   })
 
-  it('throws on non-ASCII title without slug', () => {
-    expect(() =>
-      generatePublishedFilename(
-        { title: '日本語' },
-        { applyTime: '2025-01-01T00:00:00Z' },
+  it('returns a DomainError on non-ASCII title without slug', () => {
+    const error = generatePublishedFilename(
+      { title: '日本語' },
+      { applyTime: '2025-01-01T00:00:00Z' },
+    )._unsafeUnwrapErr()
+    expect(error).toEqual(
+      new DomainError(
+        'SlugRequired',
+        'cannot derive slug: non-ASCII title without slug',
       ),
-    ).toThrow()
+    )
   })
 })
 

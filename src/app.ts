@@ -8,6 +8,7 @@ import {
   Plan,
   PlanRequest,
 } from '@fohte/blog-publisher-contract'
+import { captureWithFingerprint } from '@fohte/service-kit/observability'
 import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi'
 import type { Context } from 'hono'
 
@@ -85,6 +86,9 @@ function summarize(description: string | undefined, body: string): string {
   return body.trim().replace(/\s+/g, ' ').slice(0, 120)
 }
 
+const NOTES_READ_FINGERPRINT = 'app.notes.read-failed'
+const UNCAUGHT_ERROR_FINGERPRINT = 'app.uncaught-error'
+
 const NOTES_FETCH_CONCURRENCY = 4
 
 async function mapWithConcurrency<T, U>(
@@ -121,6 +125,7 @@ async function listNotesHandler(
     NOTES_FETCH_CONCURRENCY,
     async (meta) => {
       let content
+      // eslint-disable-next-line no-restricted-syntax -- interops with LiveSyncAdapter's throw-based contract
       try {
         content = (await deps.liveSync.readNote(meta.docId)).content
       } catch (e) {
@@ -128,9 +133,20 @@ async function listNotesHandler(
           docId: meta.docId,
           error: e instanceof Error ? e.message : String(e),
         })
+        captureWithFingerprint(e, NOTES_READ_FINGERPRINT, {
+          extras: { docId: meta.docId },
+        })
         return null
       }
-      const { frontmatter, body } = parseFrontmatter(content)
+      const parsed = parseFrontmatter(content)
+      if (parsed.isErr()) {
+        console.warn('[notes] parseFrontmatter failed; skipping', {
+          docId: meta.docId,
+          error: parsed.error.message,
+        })
+        return null
+      }
+      const { frontmatter, body } = parsed.value
       if (frontmatter.draft === true) return null
       if (frontmatter.title === '') return null
       const filename = frontmatter.publishedFilename
@@ -315,6 +331,7 @@ export function createApp(deps: AppDeps): OpenAPIHono {
     }),
     async (c) => {
       const { number } = c.req.valid('param')
+      // eslint-disable-next-line no-restricted-syntax -- interops with GitHubClient's throw-based contract
       try {
         await deps.github.closePullRequest(Number.parseInt(number, 10))
         return c.json({ closed: true as const }, 200)
@@ -325,6 +342,7 @@ export function createApp(deps: AppDeps): OpenAPIHono {
             404,
           )
         }
+        // eslint-disable-next-line no-restricted-syntax -- re-throws to app.onError, which reports and maps it to a 500
         throw e
       }
     },
@@ -352,6 +370,7 @@ export function createApp(deps: AppDeps): OpenAPIHono {
     }),
     async (c) => {
       const { number } = c.req.valid('param')
+      // eslint-disable-next-line no-restricted-syntax -- interops with GitHubClient's throw-based contract
       try {
         const ci = await deps.github.resolveCiStatus(
           Number.parseInt(number, 10),
@@ -364,6 +383,7 @@ export function createApp(deps: AppDeps): OpenAPIHono {
             404,
           )
         }
+        // eslint-disable-next-line no-restricted-syntax -- re-throws to app.onError, which reports and maps it to a 500
         throw e
       }
     },
@@ -376,6 +396,7 @@ export function createApp(deps: AppDeps): OpenAPIHono {
 
   app.onError((err, c) => {
     console.error('[app] uncaught error', err)
+    captureWithFingerprint(err, UNCAUGHT_ERROR_FINGERPRINT)
     return c.json(
       {
         error: {

@@ -1,8 +1,20 @@
 import type { BlogPrSummary, CiStatus } from '@fohte/blog-publisher-contract'
+import { captureWithFingerprint } from '@fohte/service-kit/observability'
 import { throttling } from '@octokit/plugin-throttling'
 import { Octokit } from 'octokit'
 
 import type { OctoStsTokenCache } from '@/auth/octo-sts'
+
+const GITHUB_API_FINGERPRINT = 'adapters.github-client.api-error'
+const CI_DEPLOYMENT_LOOKUP_FINGERPRINT =
+  'adapters.github-client.ci-deployment-lookup-failed'
+
+export class GitHubApiError extends Error {
+  constructor(message: string, cause: unknown) {
+    super(message, { cause })
+    this.name = 'GitHubApiError'
+  }
+}
 
 export interface FileToCommit {
   path: string
@@ -90,9 +102,11 @@ export function createOctoStsAuthStrategy(tokenCache: OctoStsTokenCache) {
         return request(route, { ...parameters, headers })
       }
       const token = await tokenCache.getToken()
+      // eslint-disable-next-line no-restricted-syntax -- interops with Octokit's throw-based request contract
       try {
         return await send(token)
       } catch (err) {
+        // eslint-disable-next-line no-restricted-syntax -- re-throws whatever Octokit's throw-based contract raised, once confirmed not a 401
         if (!isUnauthorized(err)) throw err
         console.warn('[github-client] octo-sts token rejected (401); rotating')
         // Pass the token we just used so a sibling request that already
@@ -134,6 +148,7 @@ export class GitHubClient {
   }
 
   async existsOnFohteNet(filename: string): Promise<boolean> {
+    // eslint-disable-next-line no-restricted-syntax -- interops with Octokit's throw-based request contract
     try {
       await this.octokit.request('GET /repos/{owner}/{repo}/contents/{path}', {
         owner: this.owner,
@@ -145,7 +160,15 @@ export class GitHubClient {
     } catch (e) {
       const err = e as { status?: number }
       if (err.status === 404) return false
-      throw e
+      const wrapped = new GitHubApiError(
+        `failed to check existence of ${filename} on fohte.net`,
+        e,
+      )
+      captureWithFingerprint(wrapped, GITHUB_API_FINGERPRINT, {
+        extras: { method: 'existsOnFohteNet', filename },
+      })
+      // eslint-disable-next-line no-restricted-syntax -- callers of this Octokit-backed adapter still expect a throw-based contract
+      throw wrapped
     }
   }
 
@@ -230,6 +253,7 @@ export class GitHubClient {
   }
 
   async deleteBranch(name: string): Promise<void> {
+    // eslint-disable-next-line no-restricted-syntax -- interops with Octokit's throw-based request contract
     try {
       await this.octokit.request(
         'DELETE /repos/{owner}/{repo}/git/refs/heads/{branch}',
@@ -237,7 +261,13 @@ export class GitHubClient {
       )
     } catch (e) {
       const err = e as { status?: number }
-      if (err.status !== 404 && err.status !== 422) throw e
+      if (err.status === 404 || err.status === 422) return
+      const wrapped = new GitHubApiError(`failed to delete branch ${name}`, e)
+      captureWithFingerprint(wrapped, GITHUB_API_FINGERPRINT, {
+        extras: { method: 'deleteBranch', branch: name },
+      })
+      // eslint-disable-next-line no-restricted-syntax -- callers of this Octokit-backed adapter still expect a throw-based contract
+      throw wrapped
     }
   }
 
@@ -387,6 +417,7 @@ export class GitHubClient {
     else state = 'success'
 
     let previewUrl: string | undefined
+    // eslint-disable-next-line no-restricted-syntax -- interops with Octokit's throw-based request contract
     try {
       const { data: deploysRaw } = await this.octokit.request(
         'GET /repos/{owner}/{repo}/deployments',
@@ -417,6 +448,9 @@ export class GitHubClient {
     } catch (e) {
       // Deployment lookup is best-effort; surface the failure so a missing previewUrl is debuggable.
       console.warn('[github-client] deployment lookup failed', e)
+      captureWithFingerprint(e, CI_DEPLOYMENT_LOOKUP_FINGERPRINT, {
+        extras: { method: 'resolveCiStatus', prNumber },
+      })
     }
     return {
       state,

@@ -77,6 +77,9 @@ importers:
       micromark-extension-mdx-jsx:
         specifier: 3.0.2
         version: 3.0.2
+      neverthrow:
+        specifier: 8.2.0
+        version: 8.2.0
       octokit:
         specifier: 5.0.5
         version: 5.0.5
@@ -115,8 +118,11 @@ importers:
         specifier: 3.3.5
         version: 3.3.5
       '@fohte/eslint-config':
-        specifier: 0.3.6
-        version: 0.3.6(4acfb3de04fe3b3d0f4d974886454686)
+        specifier: 0.3.9
+        version: 0.3.9(3b4ebcfbb1f7f70b6805c86f2c3847b4)
+      '@ninoseki/eslint-plugin-neverthrow':
+        specifier: 0.2.0
+        version: 0.2.0(eslint@10.6.0(jiti@2.6.1))(typescript@6.0.3)
       '@tsconfig/node-lts':
         specifier: 24.0.0
         version: 24.0.0
@@ -594,11 +600,12 @@ packages:
   '@fohte/blog-publisher-contract@0.1.0':
     resolution: {integrity: sha512-TnyklTFBcsWxaBDKAiXLBzblm92NLIFSerUHmFbstxBMoI/MQTTA7HTt7NpEHoZYOqtrjwcLjF0Qt8AIG02KQw==}
 
-  '@fohte/eslint-config@0.3.6':
-    resolution: {integrity: sha512-artqgPAhZy2Xxmkz7/teRYmbXPwAYXsRC5+Bl+rXmHxhMxM6MlJB5TGzjHCKqq9JLHEfWWNcZLQ3PWeuNW1/FA==}
+  '@fohte/eslint-config@0.3.9':
+    resolution: {integrity: sha512-WfByBGEsH/naNnVZRHSe7Kxj/c8UxsEtT1ojPJ3RJh7j/aiAbt6BZdBi7e560aWPomkPcRUnb/pUIRz78yFmSw==}
     engines: {node: '>=20.19.0 || >=22.13.0'}
     peerDependencies:
       '@eslint-community/eslint-plugin-eslint-comments': ^4.0.0
+      '@ninoseki/eslint-plugin-neverthrow': ^0.2.0
       '@typescript-eslint/eslint-plugin': ^8.60.0
       '@typescript-eslint/parser': ^8.60.0
       '@vitest/eslint-plugin': ^1.0.0
@@ -608,6 +615,8 @@ packages:
       eslint-plugin-simple-import-sort: ^13.0.0
       typescript: '>=5.0.0'
     peerDependenciesMeta:
+      '@ninoseki/eslint-plugin-neverthrow':
+        optional: true
       typescript:
         optional: true
 
@@ -865,6 +874,11 @@ packages:
     peerDependencies:
       '@emnapi/core': ^1.7.1
       '@emnapi/runtime': ^1.7.1
+
+  '@ninoseki/eslint-plugin-neverthrow@0.2.0':
+    resolution: {integrity: sha512-2QBatGYQO8DX1vc0CoHdm5xww55D3eq0vWEcr+qnQYmWzpMHxqVR7YNHdk4x8ye4rW6hOVSO+vJxJB0CstiSXg==}
+    peerDependencies:
+      eslint: '>=10.0.3'
 
   '@octokit/app@16.1.2':
     resolution: {integrity: sha512-8j7sEpUYVj18dxvh0KWj6W/l6uAiVRBl1JBDVRqH1VHKAO/G5eRVl4yEoYACjakWers1DjUkcCHyJNQK47JqyQ==}
@@ -1587,6 +1601,12 @@ packages:
 
   '@rolldown/pluginutils@1.0.1':
     resolution: {integrity: sha512-2j9bGt5Jh8hj+vPtgzPtl72j0yRxHAyumoo6TNfAjsLB04UtpSvPbPcDcBMxz7n+9CYB0c1GxQFxYRg2jimqGw==}
+
+  '@rollup/rollup-linux-x64-gnu@4.62.2':
+    resolution: {integrity: sha512-5BqxR/pshjey51iliyzTD5Xi3EN0aLmQ2lZ3lvefVV9c82BvrLo2/6OT55iifpWBufs6kdwWbuOKS841DrmK9A==}
+    cpu: [x64]
+    os: [linux]
+    libc: [glibc]
 
   '@sentry/conventions@0.12.0':
     resolution: {integrity: sha512-z1JQrl/1SLY+8wpzvork6vl+fpsg/oCCxM7HWWhUnI/R+OGNyoIzieQuggX3uUMY7NBtp8UWCQx6FeFazzOF9g==}
@@ -2835,6 +2855,10 @@ packages:
   natural-compare@1.4.0:
     resolution: {integrity: sha512-OWND8ei3VtNC9h7V60qff3SVobHr996CTwgxubgyQYEpg290h9J0buyECNNJexkFm5sOajh5G116RYA1c8ZMSw==}
 
+  neverthrow@8.2.0:
+    resolution: {integrity: sha512-kOCT/1MCPAxY5iUV3wytNFUMUolzuwd/VF/1KCx7kf6CutrOsTie+84zTGTpgQycjvfLdBBdvBvFLqFD2c0wkQ==}
+    engines: {node: '>=18'}
+
   node-domexception@1.0.0:
     resolution: {integrity: sha512-/jKZoMpw0F8GRwl4/eLROPA3cfcXtLApP0QzLmUT/HuPCZWyB7IY9ZrMeKw2O/nFIqPQB3PVM9aYm0F312AXDQ==}
     engines: {node: '>=10.5.0'}
@@ -3127,8 +3151,17 @@ packages:
     peerDependencies:
       typescript: '>=4.8.4'
 
+  tslib@1.14.1:
+    resolution: {integrity: sha512-Xni35NKzjgMrwevysHTCArtLDpPvye8zV/0E4EyYn43P7/7qvQwPh9BGkHewbMulVntbigmcT7rdX3BNo9wRJg==}
+
   tslib@2.8.1:
     resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
+
+  tsutils@3.21.0:
+    resolution: {integrity: sha512-mHKK3iUXL+3UF6xL5k0PEhKRUBKPBCv/+RkEOpjRWxxx27KKRBmmA60A9pgOUvMi8GKhRMPEmjBRPzs2W7O1OA==}
+    engines: {node: '>= 6'}
+    peerDependencies:
+      typescript: '>=2.8.0 || >= 3.2.0-dev || >= 3.3.0-dev || >= 3.4.0-dev || >= 3.5.0-dev || >= 3.6.0-dev || >= 3.6.0-beta || >= 3.7.0-dev || >= 3.7.0-beta'
 
   tsx@4.22.4:
     resolution: {integrity: sha512-X8EX+XV4QR5xCsrgxaED954zTDfY8KqlDtskKEL0cHhyS/P8b4IFOvGDQpsC9Q1XnLq915wEfwwY/zzskCtmhg==}
@@ -3897,7 +3930,7 @@ snapshots:
     dependencies:
       zod: 4.4.3
 
-  '@fohte/eslint-config@0.3.6(4acfb3de04fe3b3d0f4d974886454686)':
+  '@fohte/eslint-config@0.3.9(3b4ebcfbb1f7f70b6805c86f2c3847b4)':
     dependencies:
       '@eslint-community/eslint-plugin-eslint-comments': 4.7.2(eslint@10.6.0(jiti@2.6.1))
       '@typescript-eslint/eslint-plugin': 8.62.1(@typescript-eslint/parser@8.62.1(eslint@10.6.0(jiti@2.6.1))(typescript@6.0.3))(eslint@10.6.0(jiti@2.6.1))(typescript@6.0.3)
@@ -3908,6 +3941,7 @@ snapshots:
       eslint-plugin-import-x: 4.17.1(@typescript-eslint/utils@8.62.1(eslint@10.6.0(jiti@2.6.1))(typescript@6.0.3))(eslint@10.6.0(jiti@2.6.1))
       eslint-plugin-simple-import-sort: 13.0.0(eslint@10.6.0(jiti@2.6.1))
     optionalDependencies:
+      '@ninoseki/eslint-plugin-neverthrow': 0.2.0(eslint@10.6.0(jiti@2.6.1))(typescript@6.0.3)
       typescript: 6.0.3
 
   '@fohte/service-kit@0.1.4(@opentelemetry/api@1.9.1)(@opentelemetry/auto-instrumentations-node@0.77.0(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.1)))(@opentelemetry/exporter-metrics-otlp-proto@0.219.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-proto@0.219.0(@opentelemetry/api@1.9.1))(@opentelemetry/resources@2.8.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-metrics@2.8.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-node@0.219.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.8.0(@opentelemetry/api@1.9.1))(@opentelemetry/semantic-conventions@1.41.1)(@sentry/node@10.63.0(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.219.0(@opentelemetry/api@1.9.1)))(@sentry/opentelemetry@10.63.0(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.8.0(@opentelemetry/api@1.9.1)))':
@@ -4091,6 +4125,13 @@ snapshots:
       '@emnapi/runtime': 1.11.1
       '@tybys/wasm-util': 0.10.3
     optional: true
+
+  '@ninoseki/eslint-plugin-neverthrow@0.2.0(eslint@10.6.0(jiti@2.6.1))(typescript@6.0.3)':
+    dependencies:
+      eslint: 10.6.0(jiti@2.6.1)
+      tsutils: 3.21.0(typescript@6.0.3)
+    transitivePeerDependencies:
+      - typescript
 
   '@octokit/app@16.1.2':
     dependencies:
@@ -5024,6 +5065,9 @@ snapshots:
     optional: true
 
   '@rolldown/pluginutils@1.0.1': {}
+
+  '@rollup/rollup-linux-x64-gnu@4.62.2':
+    optional: true
 
   '@sentry/conventions@0.12.0': {}
 
@@ -6415,6 +6459,10 @@ snapshots:
 
   natural-compare@1.4.0: {}
 
+  neverthrow@8.2.0:
+    optionalDependencies:
+      '@rollup/rollup-linux-x64-gnu': 4.62.2
+
   node-domexception@1.0.0: {}
 
   node-fetch@3.3.2:
@@ -6747,7 +6795,14 @@ snapshots:
     dependencies:
       typescript: 6.0.3
 
+  tslib@1.14.1: {}
+
   tslib@2.8.1: {}
+
+  tsutils@3.21.0(typescript@6.0.3):
+    dependencies:
+      tslib: 1.14.1
+      typescript: 6.0.3
 
   tsx@4.22.4:
     dependencies:

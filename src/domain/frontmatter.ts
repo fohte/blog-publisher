@@ -1,5 +1,6 @@
 import matter from 'gray-matter'
 import yaml from 'js-yaml'
+import { err, ok, Result } from 'neverthrow'
 
 import { DomainError } from '@/domain/errors'
 
@@ -62,36 +63,40 @@ function isValidIsoDate(value: string): boolean {
   )
 }
 
-export function parseFrontmatter(source: string): FrontmatterParseResult {
-  let parsed: ReturnType<typeof matter>
-  try {
-    parsed = matter(source, { engines: { yaml: FAILSAFE_YAML } })
-  } catch (e) {
-    throw new DomainError(
+const parseMatter = Result.fromThrowable(
+  (source: string) => matter(source, { engines: { yaml: FAILSAFE_YAML } }),
+  (e) =>
+    new DomainError(
       'UnsupportedSyntax',
       `failed to parse frontmatter: ${e instanceof Error ? e.message : String(e)}`,
-    )
-  }
-  const data = parsed.data as Record<string, unknown>
-  const fm: Frontmatter = {
-    title: typeof data['title'] === 'string' ? data['title'] : '',
-  }
-  if (typeof data['date'] === 'string') fm.date = data['date']
-  else if (data['date'] instanceof Date) fm.date = data['date'].toISOString()
-  if (typeof data['updatedDate'] === 'string')
-    fm.updatedDate = data['updatedDate']
-  else if (data['updatedDate'] instanceof Date)
-    fm.updatedDate = data['updatedDate'].toISOString()
-  if (typeof data['description'] === 'string')
-    fm.description = data['description']
-  if (Array.isArray(data['tags']))
-    fm.tags = data['tags'].filter((t): t is string => typeof t === 'string')
-  if (typeof data['imagePath'] === 'string') fm.imagePath = data['imagePath']
-  if (typeof data['slug'] === 'string') fm.slug = data['slug']
-  if (typeof data['publishedFilename'] === 'string')
-    fm.publishedFilename = data['publishedFilename']
-  if (typeof data['draft'] === 'boolean') fm.draft = data['draft']
-  return { frontmatter: fm, body: parsed.content }
+    ),
+)
+
+export function parseFrontmatter(
+  source: string,
+): Result<FrontmatterParseResult, DomainError> {
+  return parseMatter(source).map((parsed) => {
+    const data = parsed.data as Record<string, unknown>
+    const fm: Frontmatter = {
+      title: typeof data['title'] === 'string' ? data['title'] : '',
+    }
+    if (typeof data['date'] === 'string') fm.date = data['date']
+    else if (data['date'] instanceof Date) fm.date = data['date'].toISOString()
+    if (typeof data['updatedDate'] === 'string')
+      fm.updatedDate = data['updatedDate']
+    else if (data['updatedDate'] instanceof Date)
+      fm.updatedDate = data['updatedDate'].toISOString()
+    if (typeof data['description'] === 'string')
+      fm.description = data['description']
+    if (Array.isArray(data['tags']))
+      fm.tags = data['tags'].filter((t): t is string => typeof t === 'string')
+    if (typeof data['imagePath'] === 'string') fm.imagePath = data['imagePath']
+    if (typeof data['slug'] === 'string') fm.slug = data['slug']
+    if (typeof data['publishedFilename'] === 'string')
+      fm.publishedFilename = data['publishedFilename']
+    if (typeof data['draft'] === 'boolean') fm.draft = data['draft']
+    return { frontmatter: fm, body: parsed.content }
+  })
 }
 
 export function validateFrontmatter(fm: Frontmatter): FrontmatterIssue[] {
@@ -155,17 +160,19 @@ export function deriveSlug(fm: Frontmatter): string | null {
 export function generatePublishedFilename(
   fm: Frontmatter,
   options: { applyTime: string },
-): string {
+): Result<string, DomainError> {
   if (fm.publishedFilename !== undefined && fm.publishedFilename !== '') {
-    return fm.publishedFilename
+    return ok(fm.publishedFilename)
   }
   const slug = deriveSlug(fm)
   if (slug === null) {
-    throw new DomainError(
-      'SlugRequired',
-      'cannot derive slug: non-ASCII title without slug',
+    return err(
+      new DomainError(
+        'SlugRequired',
+        'cannot derive slug: non-ASCII title without slug',
+      ),
     )
   }
   const datePart = (fm.date ?? options.applyTime).slice(0, 10)
-  return `${datePart}-${slug}.mdx`
+  return ok(`${datePart}-${slug}.mdx`)
 }

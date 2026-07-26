@@ -1,5 +1,9 @@
 import { readFile } from 'node:fs/promises'
 
+import { captureWithFingerprint } from '@fohte/service-kit/observability'
+
+const EXCHANGE_FAILED_FINGERPRINT = 'auth.octo-sts.exchange-failed'
+
 export interface OctoStsTokenCache {
   getToken(): Promise<string>
   // Drops the cached token. When `token` is given, drops the cache only if it
@@ -119,12 +123,17 @@ export class OctoStsTokenCacheImpl implements OctoStsTokenCache {
   }
 
   private async exchangeWithRetry(): Promise<CachedToken> {
+    // eslint-disable-next-line no-restricted-syntax -- this token cache bridges the octo-sts HTTP endpoint, a throw-based interop boundary
     try {
       return await this.exchange()
     } catch (err) {
       if (err instanceof OctoStsAuthError) {
         const status = err.status
         if (status !== undefined && status >= 400 && status < 500) {
+          captureWithFingerprint(err, EXCHANGE_FAILED_FINGERPRINT, {
+            extras: { status },
+          })
+          // eslint-disable-next-line no-restricted-syntax -- re-throws a non-retryable client-config error to the caller
           throw err
         }
       }
@@ -142,6 +151,7 @@ export class OctoStsTokenCacheImpl implements OctoStsTokenCache {
     if (saToken === '') {
       // Status 400 marks this as a client-config issue so exchangeWithRetry
       // does not retry — an empty token file is never transient.
+      // eslint-disable-next-line no-restricted-syntax -- this token cache bridges the octo-sts HTTP endpoint, a throw-based interop boundary
       throw new OctoStsAuthError(
         `octo-sts exchange aborted: SA token at ${this.config.saTokenPath} is empty`,
         400,
@@ -152,6 +162,7 @@ export class OctoStsTokenCacheImpl implements OctoStsTokenCache {
     url.searchParams.set('identity', this.config.identity)
 
     let res: Response
+    // eslint-disable-next-line no-restricted-syntax -- interops with fetch's throw-based network-error contract
     try {
       res = await this.fetchImpl(url.toString(), {
         method: 'GET',
@@ -163,11 +174,13 @@ export class OctoStsTokenCacheImpl implements OctoStsTokenCache {
       })
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : String(cause)
+      // eslint-disable-next-line no-restricted-syntax -- this token cache bridges the octo-sts HTTP endpoint, a throw-based interop boundary
       throw new OctoStsAuthError(`octo-sts exchange network error: ${message}`)
     }
 
     if (!res.ok) {
       const body = await safeReadText(res)
+      // eslint-disable-next-line no-restricted-syntax -- this token cache bridges the octo-sts HTTP endpoint, a throw-based interop boundary
       throw new OctoStsAuthError(
         `octo-sts exchange failed: HTTP ${String(res.status)}`,
         res.status,
@@ -177,10 +190,12 @@ export class OctoStsTokenCacheImpl implements OctoStsTokenCache {
 
     const json: unknown = await res.json()
     if (!isExchangeResponse(json)) {
+      // eslint-disable-next-line no-restricted-syntax -- this token cache bridges the octo-sts HTTP endpoint, a throw-based interop boundary
       throw new OctoStsAuthError('octo-sts exchange returned malformed body')
     }
     const expiresAtMs = Date.parse(json.expires_at)
     if (Number.isNaN(expiresAtMs)) {
+      // eslint-disable-next-line no-restricted-syntax -- this token cache bridges the octo-sts HTTP endpoint, a throw-based interop boundary
       throw new OctoStsAuthError(
         `octo-sts exchange returned invalid expires_at: ${json.expires_at}`,
       )
@@ -200,6 +215,7 @@ function isExchangeResponse(value: unknown): value is ExchangeResponse {
 }
 
 async function safeReadText(res: Response): Promise<string | undefined> {
+  // eslint-disable-next-line no-restricted-syntax -- interops with fetch's throw-based body-read contract
   try {
     return await res.text()
   } catch {

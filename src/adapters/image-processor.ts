@@ -5,6 +5,7 @@ import {
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3'
+import { captureWithFingerprint } from '@fohte/service-kit/observability'
 import sharp from 'sharp'
 
 import { DomainError } from '@/domain/errors'
@@ -15,6 +16,8 @@ import type {
 } from '@/domain/mdx-transformer'
 
 export type { ImageUrlMap, ImageUrlMapEntry, ImageVariantUrl }
+
+const IMAGE_UPLOAD_FINGERPRINT = 'adapters.image-processor.upload-failed'
 
 export interface ImageInput {
   sourcePath: string
@@ -92,6 +95,7 @@ export class ImageProcessor {
   }
 
   private async objectExists(key: string): Promise<boolean> {
+    // eslint-disable-next-line no-restricted-syntax -- interops with the AWS SDK's throw-based request contract
     try {
       await this.config.s3.send(
         new HeadObjectCommand({ Bucket: this.config.bucket, Key: key }),
@@ -104,7 +108,15 @@ export class ImageProcessor {
       }
       if (err.name === 'NotFound' || err.$metadata?.httpStatusCode === 404)
         return false
-      throw e
+      const wrapped = new DomainError(
+        'ImageUploadFailed',
+        `failed to check existence of ${key}: ${(e as Error).message}`,
+      )
+      captureWithFingerprint(wrapped, IMAGE_UPLOAD_FINGERPRINT, {
+        extras: { method: 'objectExists', key },
+      })
+      // eslint-disable-next-line no-restricted-syntax -- callers of this S3-backed adapter still expect a throw-based contract
+      throw wrapped
     }
   }
 
@@ -123,6 +135,7 @@ export class ImageProcessor {
   }
 
   private async putIfAbsent(key: string, body: Buffer): Promise<void> {
+    // eslint-disable-next-line no-restricted-syntax -- interops with the AWS SDK's throw-based request contract
     try {
       await this.config.s3.send(
         new PutObjectCommand({
@@ -140,10 +153,15 @@ export class ImageProcessor {
       }
       const status = err.$metadata?.httpStatusCode
       if (status === 412 || err.name === 'PreconditionFailed') return
-      throw new DomainError(
+      const wrapped = new DomainError(
         'ImageUploadFailed',
         `failed to upload ${key}: ${(e as Error).message}`,
       )
+      captureWithFingerprint(wrapped, IMAGE_UPLOAD_FINGERPRINT, {
+        extras: { method: 'putIfAbsent', key },
+      })
+      // eslint-disable-next-line no-restricted-syntax -- callers of this S3-backed adapter still expect a throw-based contract
+      throw wrapped
     }
   }
 
