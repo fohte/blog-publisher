@@ -40,6 +40,7 @@ class ConfigError extends Error {
 function req(env: NodeJS.ProcessEnv, key: string): string {
   const v = env[key]
   if (v === undefined || v === '') {
+    // eslint-disable-next-line no-restricted-syntax -- process bootstrap must fail fast on invalid config
     throw new ConfigError(`required environment variable is missing: ${key}`)
   }
   return v
@@ -56,12 +57,14 @@ function parseWidths(raw: string): number[] {
     .map((s) => s.trim())
     .filter((s) => s !== '')
   if (parts.length === 0) {
+    // eslint-disable-next-line no-restricted-syntax -- process bootstrap must fail fast on invalid config
     throw new ConfigError('IMAGE_VARIANT_WIDTHS must be a non-empty comma list')
   }
   const out: number[] = []
   for (const p of parts) {
     const n = Number.parseInt(p, 10)
     if (Number.isNaN(n) || n <= 0) {
+      // eslint-disable-next-line no-restricted-syntax -- process bootstrap must fail fast on invalid config
       throw new ConfigError(
         `IMAGE_VARIANT_WIDTHS must contain positive integers: ${p}`,
       )
@@ -78,6 +81,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
       ? 3000
       : Number.parseInt(portRaw, 10)
   if (Number.isNaN(port)) {
+    // eslint-disable-next-line no-restricted-syntax -- process bootstrap must fail fast on invalid config
     throw new ConfigError(`PORT must be an integer: ${portRaw ?? ''}`)
   }
   return {

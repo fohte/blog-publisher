@@ -95,6 +95,7 @@ export class ImageProcessor {
   }
 
   private async objectExists(key: string): Promise<boolean> {
+    // eslint-disable-next-line no-restricted-syntax -- interops with the AWS SDK's throw-based request contract
     try {
       await this.config.s3.send(
         new HeadObjectCommand({ Bucket: this.config.bucket, Key: key }),
@@ -114,6 +115,7 @@ export class ImageProcessor {
       captureWithFingerprint(wrapped, IMAGE_UPLOAD_FINGERPRINT, {
         extras: { method: 'objectExists', key },
       })
+      // eslint-disable-next-line no-restricted-syntax -- callers of this S3-backed adapter still expect a throw-based contract
       throw wrapped
     }
   }
@@ -133,6 +135,7 @@ export class ImageProcessor {
   }
 
   private async putIfAbsent(key: string, body: Buffer): Promise<void> {
+    // eslint-disable-next-line no-restricted-syntax -- interops with the AWS SDK's throw-based request contract
     try {
       await this.config.s3.send(
         new PutObjectCommand({
@@ -157,6 +160,7 @@ export class ImageProcessor {
       captureWithFingerprint(wrapped, IMAGE_UPLOAD_FINGERPRINT, {
         extras: { method: 'putIfAbsent', key },
       })
+      // eslint-disable-next-line no-restricted-syntax -- callers of this S3-backed adapter still expect a throw-based contract
       throw wrapped
     }
   }

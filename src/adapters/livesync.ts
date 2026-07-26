@@ -94,12 +94,14 @@ export class LiveSyncAdapter {
       flags?.useObfuscatedPath === true ||
       flags?.usePathObfuscation === true
     ) {
+      // eslint-disable-next-line no-restricted-syntax -- this adapter bridges CouchDB, a throw-based interop boundary
       throw new DomainError(
         'NoteDecryptFailed',
         'LiveSync Path Obfuscation is enabled; disable it before running the publisher',
       )
     }
     if (flags?.usePropertyEncryption === true) {
+      // eslint-disable-next-line no-restricted-syntax -- this adapter bridges CouchDB, a throw-based interop boundary
       throw new DomainError(
         'NoteDecryptFailed',
         'LiveSync Property Encryption is enabled; disable it before running the publisher',
@@ -109,6 +111,7 @@ export class LiveSyncAdapter {
 
   private requireConfig(): LiveSyncConfig {
     if (this.config === null)
+      // eslint-disable-next-line no-restricted-syntax -- this adapter bridges CouchDB, a throw-based interop boundary
       throw new Error('LiveSyncAdapter not initialized; call init() first')
     return this.config
   }
@@ -122,6 +125,7 @@ export class LiveSyncAdapter {
     )
     if (res.status === 404) return null
     if (!res.ok) {
+      // eslint-disable-next-line no-restricted-syntax -- this adapter bridges CouchDB, a throw-based interop boundary
       throw new Error(`CouchDB GET ${id} failed: ${String(res.status)}`)
     }
     return (await res.json()) as T
@@ -137,10 +141,12 @@ export class LiveSyncAdapter {
       },
     )
     if (!res.ok) {
+      // eslint-disable-next-line no-restricted-syntax -- this adapter bridges CouchDB, a throw-based interop boundary
       throw new Error(`CouchDB _all_docs failed: ${String(res.status)}`)
     }
     const body = (await res.json()) as AllDocsResponse | null
     if (body === null || !Array.isArray(body.rows)) {
+      // eslint-disable-next-line no-restricted-syntax -- this adapter bridges CouchDB, a throw-based interop boundary
       throw new Error(
         `CouchDB _all_docs returned an unexpected response: ${JSON.stringify(body)}`,
       )
@@ -166,6 +172,7 @@ export class LiveSyncAdapter {
     // LiveSync marks encrypted chunks with the `%=` prefix (HKDF v12).
     if (!cipher.startsWith('%=')) return cipher
     if (this.decryptChunk === undefined) {
+      // eslint-disable-next-line no-restricted-syntax -- this adapter bridges CouchDB, a throw-based interop boundary
       throw new DomainError(
         'NoteDecryptFailed',
         'encrypted chunk encountered but no decryption hook configured',
@@ -178,9 +185,11 @@ export class LiveSyncAdapter {
     this.requireConfig()
     const meta = await this.getDoc<MetadataDocument>(docId)
     if (meta === null) {
+      // eslint-disable-next-line no-restricted-syntax -- this adapter bridges CouchDB, a throw-based interop boundary
       throw new DomainError('NoteDecryptFailed', `note not found: ${docId}`)
     }
     if (meta.path === undefined) {
+      // eslint-disable-next-line no-restricted-syntax -- this adapter bridges CouchDB, a throw-based interop boundary
       throw new DomainError(
         'NoteDecryptFailed',
         `path missing on note metadata (Property Encryption?): ${docId}`,
@@ -202,6 +211,7 @@ export class LiveSyncAdapter {
         },
       )
       if (!res.ok) {
+        // eslint-disable-next-line no-restricted-syntax -- this adapter bridges CouchDB, a throw-based interop boundary
         throw new Error(
           `CouchDB _all_docs (chunks) failed: ${String(res.status)}`,
         )
@@ -215,6 +225,7 @@ export class LiveSyncAdapter {
       for (const id of chunkIds) {
         const c = byId.get(id)
         if (c === undefined) {
+          // eslint-disable-next-line no-restricted-syntax -- this adapter bridges CouchDB, a throw-based interop boundary
           throw new DomainError(
             'NoteDecryptFailed',
             `missing chunk ${id} for note ${docId}`,

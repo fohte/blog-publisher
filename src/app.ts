@@ -125,6 +125,7 @@ async function listNotesHandler(
     NOTES_FETCH_CONCURRENCY,
     async (meta) => {
       let content
+      // eslint-disable-next-line no-restricted-syntax -- interops with LiveSyncAdapter's throw-based contract
       try {
         content = (await deps.liveSync.readNote(meta.docId)).content
       } catch (e) {
@@ -330,6 +331,7 @@ export function createApp(deps: AppDeps): OpenAPIHono {
     }),
     async (c) => {
       const { number } = c.req.valid('param')
+      // eslint-disable-next-line no-restricted-syntax -- interops with GitHubClient's throw-based contract
       try {
         await deps.github.closePullRequest(Number.parseInt(number, 10))
         return c.json({ closed: true as const }, 200)
@@ -340,6 +342,7 @@ export function createApp(deps: AppDeps): OpenAPIHono {
             404,
           )
         }
+        // eslint-disable-next-line no-restricted-syntax -- re-throws to app.onError, which reports and maps it to a 500
         throw e
       }
     },
@@ -367,6 +370,7 @@ export function createApp(deps: AppDeps): OpenAPIHono {
     }),
     async (c) => {
       const { number } = c.req.valid('param')
+      // eslint-disable-next-line no-restricted-syntax -- interops with GitHubClient's throw-based contract
       try {
         const ci = await deps.github.resolveCiStatus(
           Number.parseInt(number, 10),
@@ -379,6 +383,7 @@ export function createApp(deps: AppDeps): OpenAPIHono {
             404,
           )
         }
+        // eslint-disable-next-line no-restricted-syntax -- re-throws to app.onError, which reports and maps it to a 500
         throw e
       }
     },

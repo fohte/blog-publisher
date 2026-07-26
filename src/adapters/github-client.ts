@@ -102,9 +102,11 @@ export function createOctoStsAuthStrategy(tokenCache: OctoStsTokenCache) {
         return request(route, { ...parameters, headers })
       }
       const token = await tokenCache.getToken()
+      // eslint-disable-next-line no-restricted-syntax -- interops with Octokit's throw-based request contract
       try {
         return await send(token)
       } catch (err) {
+        // eslint-disable-next-line no-restricted-syntax -- re-throws whatever Octokit's throw-based contract raised, once confirmed not a 401
         if (!isUnauthorized(err)) throw err
         console.warn('[github-client] octo-sts token rejected (401); rotating')
         // Pass the token we just used so a sibling request that already
@@ -146,6 +148,7 @@ export class GitHubClient {
   }
 
   async existsOnFohteNet(filename: string): Promise<boolean> {
+    // eslint-disable-next-line no-restricted-syntax -- interops with Octokit's throw-based request contract
     try {
       await this.octokit.request('GET /repos/{owner}/{repo}/contents/{path}', {
         owner: this.owner,
@@ -164,6 +167,7 @@ export class GitHubClient {
       captureWithFingerprint(wrapped, GITHUB_API_FINGERPRINT, {
         extras: { method: 'existsOnFohteNet', filename },
       })
+      // eslint-disable-next-line no-restricted-syntax -- callers of this Octokit-backed adapter still expect a throw-based contract
       throw wrapped
     }
   }
@@ -249,6 +253,7 @@ export class GitHubClient {
   }
 
   async deleteBranch(name: string): Promise<void> {
+    // eslint-disable-next-line no-restricted-syntax -- interops with Octokit's throw-based request contract
     try {
       await this.octokit.request(
         'DELETE /repos/{owner}/{repo}/git/refs/heads/{branch}',
@@ -261,6 +266,7 @@ export class GitHubClient {
       captureWithFingerprint(wrapped, GITHUB_API_FINGERPRINT, {
         extras: { method: 'deleteBranch', branch: name },
       })
+      // eslint-disable-next-line no-restricted-syntax -- callers of this Octokit-backed adapter still expect a throw-based contract
       throw wrapped
     }
   }
@@ -411,6 +417,7 @@ export class GitHubClient {
     else state = 'success'
 
     let previewUrl: string | undefined
+    // eslint-disable-next-line no-restricted-syntax -- interops with Octokit's throw-based request contract
     try {
       const { data: deploysRaw } = await this.octokit.request(
         'GET /repos/{owner}/{repo}/deployments',

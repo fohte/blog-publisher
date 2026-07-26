@@ -65,6 +65,7 @@ export async function probeServices(ep: E2EEndpoints): Promise<boolean> {
   // AbortSignal so a half-dead container (LISTEN + no response) does not hang
   // the top-level await that gates suite execution.
   const signal = AbortSignal.timeout(2_000)
+  // eslint-disable-next-line no-restricted-syntax -- interops with fetch's throw-based network-error contract
   try {
     const couch = await fetch(`${ep.couchUrl.replace(/\/$/, '')}/_up`, {
       signal,
@@ -84,12 +85,14 @@ export async function resetCouchDb(ep: E2EEndpoints): Promise<void> {
   }
   const del = await fetch(dbUrl(ep), { method: 'DELETE', headers })
   if (!del.ok && del.status !== 404) {
+    // eslint-disable-next-line no-restricted-syntax -- E2E setup helper must fail fast on CouchDB errors
     throw new Error(`failed to drop CouchDB database: ${String(del.status)}`)
   }
   // 412 here means the DELETE did not actually remove the database, so it must
   // surface as a test setup failure rather than be silently accepted.
   const create = await fetch(dbUrl(ep), { method: 'PUT', headers })
   if (!create.ok) {
+    // eslint-disable-next-line no-restricted-syntax -- E2E setup helper must fail fast on CouchDB errors
     throw new Error(
       `failed to create CouchDB database: ${String(create.status)}`,
     )
@@ -109,6 +112,7 @@ export async function insertDoc(
     body: JSON.stringify(doc),
   })
   if (!res.ok) {
+    // eslint-disable-next-line no-restricted-syntax -- E2E setup helper must fail fast on CouchDB errors
     throw new Error(
       `failed to insert ${doc._id}: ${String(res.status)} ${await res.text()}`,
     )
@@ -145,6 +149,7 @@ export async function resetBucket(
   s3: S3Client,
   ep: E2EEndpoints,
 ): Promise<void> {
+  // eslint-disable-next-line no-restricted-syntax -- interops with the AWS SDK's throw-based request contract
   try {
     await s3.send(new HeadBucketCommand({ Bucket: ep.s3Bucket }))
     const list = await s3.send(
@@ -165,6 +170,7 @@ export async function resetBucket(
     if (err.name === 'NotFound' || err.$metadata?.httpStatusCode === 404) {
       await s3.send(new CreateBucketCommand({ Bucket: ep.s3Bucket }))
     } else {
+      // eslint-disable-next-line no-restricted-syntax -- re-throws an unexpected AWS SDK error to fail the E2E setup fast
       throw e
     }
   }
