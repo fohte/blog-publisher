@@ -1,9 +1,9 @@
 import type { BlogPrSummary } from '@fohte/blog-publisher-contract'
 import { describe, expect, it, vi } from 'vitest'
 
-import type { LiveSyncNote } from '@/adapters/livesync'
-import { apply, type ApplyDeps } from '@/domain/apply-orchestrator'
-import type { PlanLoaders } from '@/domain/plan-builder'
+import type { LiveSyncNote } from '#adapters/livesync'
+import { apply, type ApplyDeps } from '#domain/apply-orchestrator'
+import type { PlanLoaders } from '#domain/plan-builder'
 
 const FIXED = '2026-06-01T00:00:00.000Z'
 

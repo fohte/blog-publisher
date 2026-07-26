@@ -8,12 +8,12 @@ import {
 import { captureWithFingerprint } from '@fohte/service-kit/observability'
 import sharp from 'sharp'
 
-import { DomainError } from '@/domain/errors'
+import { DomainError } from '#domain/errors'
 import type {
   ImageMapEntry as ImageUrlMapEntry,
   ImageUrlMap,
   ImageVariant as ImageVariantUrl,
-} from '@/domain/mdx-transformer'
+} from '#domain/mdx-transformer'
 
 export type { ImageUrlMap, ImageUrlMapEntry, ImageVariantUrl }
 

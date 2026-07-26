@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { LiveSyncAdapter } from '@/adapters/livesync'
-import { DomainError } from '@/domain/errors'
+import { LiveSyncAdapter } from '#adapters/livesync'
+import { DomainError } from '#domain/errors'
 
 type Doc = Record<string, unknown> & { _id: string }
 

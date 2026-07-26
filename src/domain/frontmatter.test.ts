@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { DomainError } from '@/domain/errors'
+import { DomainError } from '#domain/errors'
 import {
   deriveSlug,
   generatePublishedFilename,
@@ -8,7 +8,7 @@ import {
   parseFrontmatter,
   sanitizeSlug,
   validateFrontmatter,
-} from '@/domain/frontmatter'
+} from '#domain/frontmatter'
 
 describe('parseFrontmatter', () => {
   it('parses minimal frontmatter', () => {

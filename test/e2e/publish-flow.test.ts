@@ -15,10 +15,10 @@ import { fileURLToPath } from 'node:url'
 
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { GitHubClient } from '@/adapters/github-client'
-import { ImageProcessor } from '@/adapters/image-processor'
-import { LiveSyncAdapter } from '@/adapters/livesync'
-import { type AppDeps, createApp } from '@/app'
+import { GitHubClient } from '#adapters/github-client'
+import { ImageProcessor } from '#adapters/image-processor'
+import { LiveSyncAdapter } from '#adapters/livesync'
+import { type AppDeps, createApp } from '#app'
 
 import { FakeGitHub } from './fake-github'
 import { buildNoteFixture } from './fixtures'

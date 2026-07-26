@@ -13,7 +13,7 @@ import { toMarkdown } from 'mdast-util-to-markdown'
 import { mdxJsx as mdxJsxMicromark } from 'micromark-extension-mdx-jsx'
 import { SKIP, visit } from 'unist-util-visit'
 
-import type { ErrorCode } from '@/domain/errors'
+import type { ErrorCode } from '#domain/errors'
 
 export interface ImageVariant {
   width: number

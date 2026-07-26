@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   type ImageUrlMap,
   transformMarkdownToMdx,
-} from '@/domain/mdx-transformer'
+} from '#domain/mdx-transformer'
 
 const emptyMap: ImageUrlMap = {}
 const noResolver = () => null

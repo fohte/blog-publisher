@@ -2,7 +2,7 @@ import matter from 'gray-matter'
 import yaml from 'js-yaml'
 import { err, ok, Result } from 'neverthrow'
 
-import { DomainError } from '@/domain/errors'
+import { DomainError } from '#domain/errors'
 
 const FAILSAFE_YAML = {
   parse: (input: string): object => {

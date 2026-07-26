@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { loadConfig } from '@/config'
+import { loadConfig } from '#config'
 
 function baseEnv(): Record<string, string> {
   return {
