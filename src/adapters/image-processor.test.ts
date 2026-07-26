@@ -4,8 +4,8 @@ import { HeadObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3'
 import sharp from 'sharp'
 import { describe, expect, it, vi } from 'vitest'
 
-import { ImageProcessor } from '@/adapters/image-processor'
-import { DomainError } from '@/domain/errors'
+import { ImageProcessor } from '#adapters/image-processor'
+import { DomainError } from '#domain/errors'
 
 async function makePng(width: number, height: number): Promise<Buffer> {
   return sharp({

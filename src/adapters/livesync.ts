@@ -1,4 +1,4 @@
-import { DomainError } from '@/domain/errors'
+import { DomainError } from '#domain/errors'
 
 export interface LiveSyncConfig {
   couchUrl: string

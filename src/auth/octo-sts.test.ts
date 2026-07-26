@@ -5,7 +5,7 @@ import {
   type OctoStsConfig,
   type OctoStsDeps,
   OctoStsTokenCacheImpl,
-} from '@/auth/octo-sts'
+} from '#auth/octo-sts'
 
 const BASE_CONFIG: OctoStsConfig = {
   url: 'https://octo-sts.fohte.net',

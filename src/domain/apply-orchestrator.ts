@@ -3,20 +3,20 @@ import { captureWithFingerprint } from '@fohte/service-kit/observability'
 import yaml from 'js-yaml'
 import { ResultAsync } from 'neverthrow'
 
-import type { FileToCommit, GitHubClient } from '@/adapters/github-client'
-import type { ImageInput, ImageProcessor } from '@/adapters/image-processor'
-import type { LiveSyncNote } from '@/adapters/livesync'
+import type { FileToCommit, GitHubClient } from '#adapters/github-client'
+import type { ImageInput, ImageProcessor } from '#adapters/image-processor'
+import type { LiveSyncNote } from '#adapters/livesync'
 import {
   generatePublishedFilename,
   mapToPublishedFrontmatter,
   parseFrontmatter,
-} from '@/domain/frontmatter'
+} from '#domain/frontmatter'
 import {
   type ImageUrlMap,
   type SlugResolver,
   transformMarkdownToMdx,
-} from '@/domain/mdx-transformer'
-import { buildPlan, type PlanLoaders } from '@/domain/plan-builder'
+} from '#domain/mdx-transformer'
+import { buildPlan, type PlanLoaders } from '#domain/plan-builder'
 
 export interface ApplyDeps {
   loaders: PlanLoaders

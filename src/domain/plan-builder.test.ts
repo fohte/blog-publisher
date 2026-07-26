@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
-import type { LiveSyncNote } from '@/adapters/livesync'
+import type { LiveSyncNote } from '#adapters/livesync'
 import {
   buildPlan,
   computeSignature,
   extractImageSourcePaths,
   type PlanLoaders,
-} from '@/domain/plan-builder'
+} from '#domain/plan-builder'
 
 function note(docId: string, path: string, content: string): LiveSyncNote {
   return { docId, path, content, mtime: 0, size: content.length }

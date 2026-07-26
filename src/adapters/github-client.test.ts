@@ -4,8 +4,8 @@ import {
   createOctoStsAuthStrategy,
   GitHubApiError,
   GitHubClient,
-} from '@/adapters/github-client'
-import type { OctoStsTokenCache } from '@/auth/octo-sts'
+} from '#adapters/github-client'
+import type { OctoStsTokenCache } from '#auth/octo-sts'
 
 interface RecordedCall {
   route: string

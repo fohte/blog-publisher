@@ -1,7 +1,7 @@
 import type { BlogPrSummary } from '@fohte/blog-publisher-contract'
 import { describe, expect, it, vi } from 'vitest'
 
-import { type AppDeps, createApp } from '@/app'
+import { type AppDeps, createApp } from '#app'
 
 function ok(slug: string): string {
   return `---\ntitle: ${slug}\ndate: 2026-01-01\ndescription: d\nslug: ${slug}\n---\nbody`

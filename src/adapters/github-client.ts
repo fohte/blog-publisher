@@ -3,7 +3,7 @@ import { captureWithFingerprint } from '@fohte/service-kit/observability'
 import { throttling } from '@octokit/plugin-throttling'
 import { Octokit } from 'octokit'
 
-import type { OctoStsTokenCache } from '@/auth/octo-sts'
+import type { OctoStsTokenCache } from '#auth/octo-sts'
 
 const GITHUB_API_FINGERPRINT = 'adapters.github-client.api-error'
 const CI_DEPLOYMENT_LOOKUP_FINGERPRINT =

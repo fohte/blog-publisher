@@ -2,18 +2,18 @@ import { createHash } from 'node:crypto'
 
 import type { Plan, PlanIssue, PlanItem } from '@fohte/blog-publisher-contract'
 
-import type { LiveSyncNote } from '@/adapters/livesync'
+import type { LiveSyncNote } from '#adapters/livesync'
 import {
   deriveSlug,
   type Frontmatter,
   generatePublishedFilename,
   parseFrontmatter,
   validateFrontmatter,
-} from '@/domain/frontmatter'
+} from '#domain/frontmatter'
 import {
   type SlugResolver,
   transformMarkdownToMdx,
-} from '@/domain/mdx-transformer'
+} from '#domain/mdx-transformer'
 
 export interface PlanLoaders {
   readNote(docId: string): Promise<LiveSyncNote | null>
