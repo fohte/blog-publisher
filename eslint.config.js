@@ -6,6 +6,8 @@ export default config(
     errorHandling: {},
   },
   {
+    // ESLint's flat config does not auto-skip gitignored paths; without this,
+    // eslint lints the tsup-generated bundle in dist/.
     ignores: ['dist'],
   },
   {
