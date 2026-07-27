@@ -6,6 +6,11 @@ export default config(
     errorHandling: {},
   },
   {
+    // ESLint's flat config does not auto-skip gitignored paths; without this,
+    // eslint lints the tsup-generated bundle in dist/.
+    ignores: ['dist'],
+  },
+  {
     // Octokit / S3 / fetch / mdast extension responses are typed as `unknown`; adapters narrow at the boundary.
     files: ['src/adapters/**/*.ts', 'src/domain/mdx-transformer.ts'],
     rules: {
