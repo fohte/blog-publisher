@@ -1,24 +1,12 @@
-<<<<<<< before updating
-||||||| last update
-=======
 node_modules
 dist
->>>>>>> after updating
 .git
-<<<<<<< before updating
-||||||| last update
-=======
 .github
->>>>>>> after updating
 .worktrees
-<<<<<<< before updating
-node_modules
 coverage
 *.log
 .env
 .env.*
-||||||| last update
-=======
 .claude
 .gemini
 .mise.toml
@@ -39,4 +27,3 @@ scripts
 .storybook
 storybook-static
 **/*.test.ts
->>>>>>> after updating

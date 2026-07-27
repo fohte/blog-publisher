@@ -6,6 +6,9 @@ export default config(
     errorHandling: {},
   },
   {
+    ignores: ['dist'],
+  },
+  {
     // Octokit / S3 / fetch / mdast extension responses are typed as `unknown`; adapters narrow at the boundary.
     files: ['src/adapters/**/*.ts', 'src/domain/mdx-transformer.ts'],
     rules: {

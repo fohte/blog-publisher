@@ -7,12 +7,7 @@
     "#*": "./src/*.ts"
   },
   "scripts": {
-<<<<<<< before updating
-    "start": "tsx --import ./otel-register.mjs src/index.ts",
-||||||| last update
-=======
     "start": "node --import ./otel-register.mjs dist/index.js",
->>>>>>> after updating
     "dev": "tsx watch --import ./otel-register.mjs src/index.ts",
     "lint": "eslint .",
     "format:eslint": "eslint --fix .",
@@ -76,7 +71,6 @@
     "remark-parse": "11.0.0",
     "remark-stringify": "11.0.0",
     "sharp": "0.34.5",
-    "tsx": "4.22.4",
     "unified": "11.0.5",
     "unist-util-visit": "5.1.0",
     "zod": "4.4.3"
