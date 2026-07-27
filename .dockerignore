@@ -1,7 +1,42 @@
+<<<<<<< before updating
+||||||| last update
+=======
+node_modules
+dist
+>>>>>>> after updating
 .git
+<<<<<<< before updating
+||||||| last update
+=======
+.github
+>>>>>>> after updating
 .worktrees
+<<<<<<< before updating
 node_modules
 coverage
 *.log
 .env
 .env.*
+||||||| last update
+=======
+.claude
+.gemini
+.mise.toml
+.editorconfig
+.prettierignore
+.prettierrc.yaml
+.pinact.yaml
+.gitignore
+CLAUDE.md
+README.md
+lefthook.yml
+commitlint.config.cjs
+commitlint-plugin-no-external-refs.cjs
+eslint.config.js
+vitest.config.ts
+renovate.json5
+scripts
+.storybook
+storybook-static
+**/*.test.ts
+>>>>>>> after updating

@@ -1,8 +1,16 @@
+<<<<<<< before updating
 // Must load before any instrumented module is imported below, so it cannot
 // sit in the sorted # import group.
 // eslint-disable-next-line simple-import-sort/imports -- must stay first
 import { observability } from '#bootstrap'
+||||||| last update
+export const greet = (name: string): string => {
+  return `Hello, ${name}!`
+=======
+import '#bootstrap'
+>>>>>>> after updating
 
+<<<<<<< before updating
 import { S3Client } from '@aws-sdk/client-s3'
 import { serve } from '@hono/node-server'
 
@@ -90,6 +98,13 @@ async function main(): Promise<void> {
       })
     })
   })
+||||||| last update
+export const greet = (name: string): string => {
+  return `Hello, ${name}!`
+=======
+export const greet = (name: string): string => {
+  return `Hello, ${name}!`
+>>>>>>> after updating
 }
 
 main().catch((err: unknown) => {
