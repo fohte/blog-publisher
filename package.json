@@ -7,8 +7,8 @@
     "#*": "./src/*.ts"
   },
   "scripts": {
-    "start": "node --import ./otel-register.mjs dist/index.js",
-    "dev": "tsx watch --import ./otel-register.mjs src/index.ts",
+    "start": "node --import @fohte/service-kit/otel-register dist/index.js",
+    "dev": "tsx watch --import @fohte/service-kit/otel-register src/index.ts",
     "lint": "eslint .",
     "format:eslint": "eslint --fix .",
     "format:prettier": "prettier --write .",
@@ -16,39 +16,10 @@
     "test": "conc pnpm:test:type pnpm:test:unit",
     "test:type": "tsc --noEmit",
     "test:unit": "vitest run",
-<<<<<<< before updating
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
     "e2e:up": "docker compose -f docker-compose.e2e.yml up -d --wait",
     "e2e:down": "docker compose -f docker-compose.e2e.yml down -v",
     "build": "tsup"
-||||||| last update
-    "build": "tsup",
-    "start": "node --import ./otel-register.mjs dist/index.js",
-    "dev": "tsx watch --import ./otel-register.mjs src/index.ts"
-  },
-  "dependencies": {
-    "@fohte/service-kit": "0.1.4",
-    "@opentelemetry/api": "1.9.1",
-    "@opentelemetry/auto-instrumentations-node": "0.77.0",
-    "@opentelemetry/exporter-trace-otlp-proto": "0.219.0",
-    "@opentelemetry/instrumentation": "0.219.0",
-    "@opentelemetry/resources": "2.8.0",
-    "@opentelemetry/sdk-node": "0.219.0",
-    "@opentelemetry/sdk-trace-base": "2.8.0",
-    "@opentelemetry/semantic-conventions": "1.41.1",
-    "@sentry/node": "10.63.0",
-    "@sentry/opentelemetry": "10.63.0",
-    "neverthrow": "8.2.0"
-=======
-    "build": "tsup",
-    "start": "node --import @fohte/service-kit/otel-register dist/index.js",
-    "dev": "tsx watch --import @fohte/service-kit/otel-register src/index.ts"
-  },
-  "dependencies": {
-    "@fohte/service-kit": "0.1.7",
-    "@opentelemetry/api": "1.9.1",
-    "neverthrow": "8.2.0"
->>>>>>> after updating
   },
   "devDependencies": {
     "@commitlint/cli": "21.2.1",
@@ -57,16 +28,10 @@
     "@ninoseki/eslint-plugin-neverthrow": "0.2.0",
     "@tsconfig/node-lts": "24.0.0",
     "@tsconfig/strictest": "2.0.8",
-<<<<<<< before updating
     "@types/js-yaml": "4.0.9",
     "@types/mdast": "4.0.4",
-    "@types/node": "24.13.2",
-    "@types/unist": "3.0.3",
-||||||| last update
-    "@types/node": "24.13.2",
-=======
     "@types/node": "24.13.3",
->>>>>>> after updating
+    "@types/unist": "3.0.3",
     "concurrently": "10.0.3",
     "eslint": "10.6.0",
     "prettier": "3.9.6",
@@ -78,20 +43,11 @@
   "dependencies": {
     "@aws-sdk/client-s3": "3.1057.0",
     "@fohte/blog-publisher-contract": "0.1.0",
-    "@fohte/service-kit": "0.1.4",
+    "@fohte/service-kit": "0.1.7",
     "@hono/node-server": "2.0.10",
     "@hono/zod-openapi": "1.4.0",
     "@octokit/plugin-throttling": "11.0.3",
     "@opentelemetry/api": "1.9.1",
-    "@opentelemetry/auto-instrumentations-node": "0.77.0",
-    "@opentelemetry/exporter-trace-otlp-proto": "0.219.0",
-    "@opentelemetry/instrumentation": "0.219.0",
-    "@opentelemetry/resources": "2.8.0",
-    "@opentelemetry/sdk-node": "0.219.0",
-    "@opentelemetry/sdk-trace-base": "2.8.0",
-    "@opentelemetry/semantic-conventions": "1.41.1",
-    "@sentry/node": "10.63.0",
-    "@sentry/opentelemetry": "10.63.0",
     "gray-matter": "4.0.3",
     "hono": "4.12.34",
     "js-yaml": "4.2.0",
