@@ -89,7 +89,10 @@ async function main(): Promise<void> {
 
   server.on('error', (err: unknown) => {
     logger.fatal(
-      { error: err instanceof Error ? err.message : String(err) },
+      {
+        error: err instanceof Error ? err.message : String(err),
+        stack: err instanceof Error ? err.stack : undefined,
+      },
       'server failed to start',
     )
     process.exit(1)
@@ -117,7 +120,10 @@ async function main(): Promise<void> {
 
 main().catch((err: unknown) => {
   logger.fatal(
-    { error: err instanceof Error ? err.message : String(err) },
+    {
+      error: err instanceof Error ? err.message : String(err),
+      stack: err instanceof Error ? err.stack : undefined,
+    },
     'fatal startup error',
   )
   process.exit(1)

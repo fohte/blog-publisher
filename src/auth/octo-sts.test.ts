@@ -6,6 +6,7 @@ import {
   type OctoStsDeps,
   OctoStsTokenCacheImpl,
 } from '#auth/octo-sts'
+import { logger } from '#logger'
 
 const BASE_CONFIG: OctoStsConfig = {
   url: 'https://octo-sts.fohte.net',
@@ -52,7 +53,7 @@ function makeDeps(overrides: Partial<OctoStsDeps> = {}): {
 
 describe('OctoStsTokenCacheImpl.getToken', () => {
   beforeEach(() => {
-    vi.spyOn(console, 'warn').mockImplementation(() => {})
+    vi.spyOn(logger, 'warn').mockImplementation(() => {})
   })
   afterEach(() => {
     vi.restoreAllMocks()

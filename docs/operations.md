@@ -52,12 +52,13 @@ The blog publisher rides on top of the shared slack-bot core (separate repo). Th
 
 ## Configuration template
 
-`.env.example` at the repo root mirrors the variables the Service reads through `src/config.ts`, plus the observability variables below (read directly from `process.env` by `src/bootstrap.ts`). Operators should split them between non-secret config and a secret store as follows.
+`.env.example` at the repo root mirrors the variables the Service reads through `src/config.ts`, plus the logger and observability variables below (read directly from `process.env` by `src/logger.ts` and `src/bootstrap.ts`). Operators should split them between non-secret config and a secret store as follows.
 
 ### Non-secret config
 
 | Key                      | Notes                                                                                   |
 | ------------------------ | --------------------------------------------------------------------------------------- |
+| `LOG_LEVEL`              | pino level: `trace`/`debug`/`info`/`warn`/`error`/`fatal`/`silent`. Defaults to `info`. |
 | `PORT`                   | Defaults to `3000`.                                                                     |
 | `NOTES_PATH_PREFIX`      | Vault subtree, e.g. `notes/blogs/`.                                                     |
 | `COUCHDB_URL`            | Private-network URL (no auth in URL).                                                   |

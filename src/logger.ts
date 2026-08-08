@@ -15,8 +15,12 @@ const LOG_LEVELS: readonly LogLevel[] = [
   'silent',
 ]
 
+const levelResult = optionalEnum(process.env, 'LOG_LEVEL', LOG_LEVELS, 'info')
+
 export const logger: Logger = createLogger({
-  level: optionalEnum(process.env, 'LOG_LEVEL', LOG_LEVELS, 'info').unwrapOr(
-    'info',
-  ),
+  level: levelResult.unwrapOr('info'),
 })
+
+if (levelResult.isErr()) {
+  logger.warn({ error: levelResult.error }, 'invalid LOG_LEVEL; using info')
+}
