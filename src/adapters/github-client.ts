@@ -4,6 +4,7 @@ import { throttling } from '@octokit/plugin-throttling'
 import { Octokit } from 'octokit'
 
 import type { OctoStsTokenCache } from '#auth/octo-sts'
+import { logger } from '#logger'
 
 const GITHUB_API_FINGERPRINT = 'adapters.github-client.api-error'
 const CI_DEPLOYMENT_LOOKUP_FINGERPRINT =
@@ -108,7 +109,10 @@ export function createOctoStsAuthStrategy(tokenCache: OctoStsTokenCache) {
       } catch (err) {
         // eslint-disable-next-line no-restricted-syntax -- re-throws whatever Octokit's throw-based contract raised, once confirmed not a 401
         if (!isUnauthorized(err)) throw err
-        console.warn('[github-client] octo-sts token rejected (401); rotating')
+        logger.warn(
+          {},
+          '[github-client] octo-sts token rejected (401); rotating',
+        )
         // Pass the token we just used so a sibling request that already
         // rotated the cache to a newer token is not invalidated.
         tokenCache.invalidate(token)
@@ -447,7 +451,10 @@ export class GitHubClient {
       }
     } catch (e) {
       // Deployment lookup is best-effort; surface the failure so a missing previewUrl is debuggable.
-      console.warn('[github-client] deployment lookup failed', e)
+      logger.warn(
+        { error: e instanceof Error ? e.message : String(e) },
+        '[github-client] deployment lookup failed',
+      )
       captureWithFingerprint(e, CI_DEPLOYMENT_LOOKUP_FINGERPRINT, {
         extras: { method: 'resolveCiStatus', prNumber },
       })

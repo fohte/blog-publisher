@@ -5,6 +5,7 @@ import { observability } from '#bootstrap'
 
 import { S3Client } from '@aws-sdk/client-s3'
 import { serve } from '@hono/node-server'
+import { createShutdownHandler } from '@fohte/service-kit/shutdown'
 
 import { GitHubClient } from '#adapters/github-client'
 import { ImageProcessor } from '#adapters/image-processor'
@@ -12,9 +13,18 @@ import { LiveSyncAdapter } from '#adapters/livesync'
 import { createApp } from '#app'
 import { OctoStsTokenCacheImpl } from '#auth/octo-sts'
 import { loadConfig } from '#config'
+import { logger } from '#logger'
 
 async function main(): Promise<void> {
-  const config = loadConfig()
+  const configResult = loadConfig()
+  if (configResult.isErr()) {
+    logger.fatal(
+      { issues: configResult.error.issues },
+      'invalid environment configuration',
+    )
+    process.exit(1)
+  }
+  const config = configResult.value
 
   const liveSync = new LiveSyncAdapter()
   await liveSync.init({
@@ -74,25 +84,41 @@ async function main(): Promise<void> {
   })
 
   const server = serve({ fetch: app.fetch, port: config.port }, (info) => {
-    console.log(`Listening on http://localhost:${String(info.port)}`)
+    logger.info({ port: info.port }, 'server listening')
   })
 
-  server.on('error', (err) => {
-    console.error('Server failed to start:', err)
+  server.on('error', (err: unknown) => {
+    logger.fatal(
+      { error: err instanceof Error ? err.message : String(err) },
+      'server failed to start',
+    )
     process.exit(1)
   })
 
-  process.on('SIGTERM', () => {
-    console.log('SIGTERM received, shutting down')
-    server.close(() => {
-      void (observability?.shutdown() ?? Promise.resolve()).finally(() => {
-        process.exit(0)
-      })
-    })
-  })
+  createShutdownHandler(
+    [
+      {
+        name: 'http-server',
+        run: () =>
+          new Promise<void>((resolve) => {
+            server.close(() => {
+              resolve()
+            })
+          }),
+      },
+      {
+        name: 'observability',
+        run: () => observability?.shutdown() ?? Promise.resolve(),
+      },
+    ],
+    { logger },
+  )
 }
 
 main().catch((err: unknown) => {
-  console.error('Fatal startup error:', err)
+  logger.fatal(
+    { error: err instanceof Error ? err.message : String(err) },
+    'fatal startup error',
+  )
   process.exit(1)
 })

@@ -10,5 +10,12 @@ import {
   type ObservabilityHandle,
 } from '@fohte/service-kit/observability'
 
+import { logger } from '#logger'
+
+// registerSignalHandlers is off because #shutdown owns SIGTERM/SIGINT for the
+// whole service and runs this handle's shutdown() as one of its steps.
 export const observability: ObservabilityHandle | undefined =
-  initObservabilityIfConfigured(process.env)
+  initObservabilityIfConfigured(process.env, {
+    logger,
+    registerSignalHandlers: false,
+  })
