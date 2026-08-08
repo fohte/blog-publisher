@@ -1,3 +1,13 @@
+import {
+  type EnvSource,
+  EnvValidationError,
+  optionalInt,
+  optionalString,
+  parseEnv,
+  requireString,
+} from '@fohte/service-kit/env'
+import { err, ok, type Result } from 'neverthrow'
+
 export interface Config {
   port: number
   bearerToken: string
@@ -30,96 +40,89 @@ export interface Config {
   }
 }
 
-class ConfigError extends Error {
-  constructor(message: string) {
-    super(message)
-    this.name = 'ConfigError'
-  }
-}
-
-function req(env: NodeJS.ProcessEnv, key: string): string {
-  const v = env[key]
-  if (v === undefined || v === '') {
-    // eslint-disable-next-line no-restricted-syntax -- process bootstrap must fail fast on invalid config
-    throw new ConfigError(`required environment variable is missing: ${key}`)
-  }
-  return v
-}
-
-function opt(env: NodeJS.ProcessEnv, key: string): string | undefined {
-  const v = env[key]
-  return v === undefined || v === '' ? undefined : v
-}
-
-function parseWidths(raw: string): number[] {
+function parseVariantWidths(raw: string): Result<number[], string> {
   const parts = raw
     .split(',')
     .map((s) => s.trim())
     .filter((s) => s !== '')
   if (parts.length === 0) {
-    // eslint-disable-next-line no-restricted-syntax -- process bootstrap must fail fast on invalid config
-    throw new ConfigError('IMAGE_VARIANT_WIDTHS must be a non-empty comma list')
+    return err('IMAGE_VARIANT_WIDTHS must be a non-empty comma list')
   }
-  const out: number[] = []
+  const widths: number[] = []
   for (const p of parts) {
     const n = Number.parseInt(p, 10)
     if (Number.isNaN(n) || n <= 0) {
-      // eslint-disable-next-line no-restricted-syntax -- process bootstrap must fail fast on invalid config
-      throw new ConfigError(
-        `IMAGE_VARIANT_WIDTHS must contain positive integers: ${p}`,
-      )
+      return err(`IMAGE_VARIANT_WIDTHS must contain positive integers: ${p}`)
     }
-    out.push(n)
+    widths.push(n)
   }
-  return out
+  return ok(widths)
 }
 
-export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
-  const portRaw = env['PORT']
-  const port =
-    portRaw === undefined || portRaw === ''
-      ? 3000
-      : Number.parseInt(portRaw, 10)
-  if (Number.isNaN(port)) {
-    // eslint-disable-next-line no-restricted-syntax -- process bootstrap must fail fast on invalid config
-    throw new ConfigError(`PORT must be an integer: ${portRaw ?? ''}`)
-  }
-  return {
-    port,
-    bearerToken: req(env, 'BEARER_TOKEN'),
-    notesPathPrefix: opt(env, 'NOTES_PATH_PREFIX') ?? 'notes/blogs/',
-    liveSync: (() => {
-      const passphrase = opt(env, 'LIVESYNC_PASSPHRASE')
-      return {
-        couchUrl: req(env, 'COUCHDB_URL'),
-        username: req(env, 'COUCHDB_USERNAME'),
-        password: req(env, 'COUCHDB_PASSWORD'),
-        database: req(env, 'COUCHDB_DATABASE'),
-        ...(passphrase !== undefined ? { passphrase } : {}),
-      }
-    })(),
+export function loadConfig(
+  env: EnvSource = process.env,
+): Result<Config, EnvValidationError> {
+  return parseEnv({
+    port: optionalInt(env, 'PORT', 3000),
+    bearerToken: requireString(env, 'BEARER_TOKEN'),
+    notesPathPrefix: optionalString(env, 'NOTES_PATH_PREFIX', 'notes/blogs/'),
+    couchUrl: requireString(env, 'COUCHDB_URL'),
+    couchUsername: requireString(env, 'COUCHDB_USERNAME'),
+    couchPassword: requireString(env, 'COUCHDB_PASSWORD'),
+    couchDatabase: requireString(env, 'COUCHDB_DATABASE'),
+    livesyncPassphrase: optionalString(env, 'LIVESYNC_PASSPHRASE'),
+    githubOwner: requireString(env, 'GITHUB_OWNER'),
+    githubRepo: requireString(env, 'GITHUB_REPO'),
+    githubDefaultBranch: optionalString(env, 'GITHUB_DEFAULT_BRANCH', 'master'),
+    octoStsUrl: requireString(env, 'OCTO_STS_URL'),
+    octoStsScope: requireString(env, 'OCTO_STS_SCOPE'),
+    octoStsIdentity: requireString(env, 'OCTO_STS_IDENTITY'),
+    octoStsSaTokenPath: optionalString(
+      env,
+      'OCTO_STS_SA_TOKEN_PATH',
+      '/var/run/secrets/tokens/octo-sts-token',
+    ),
+    r2Bucket: requireString(env, 'R2_BUCKET'),
+    r2PublicBaseUrl: requireString(env, 'R2_PUBLIC_BASE_URL'),
+    r2AccountId: requireString(env, 'R2_ACCOUNT_ID'),
+    r2AccessKeyId: requireString(env, 'R2_ACCESS_KEY_ID'),
+    r2SecretAccessKey: requireString(env, 'R2_SECRET_ACCESS_KEY'),
+    r2VariantWidths: optionalString(
+      env,
+      'IMAGE_VARIANT_WIDTHS',
+      '640,1280,1920',
+    ).andThen(parseVariantWidths),
+  }).map((f) => ({
+    port: f.port,
+    bearerToken: f.bearerToken,
+    notesPathPrefix: f.notesPathPrefix,
+    liveSync: {
+      couchUrl: f.couchUrl,
+      username: f.couchUsername,
+      password: f.couchPassword,
+      database: f.couchDatabase,
+      ...(f.livesyncPassphrase !== undefined
+        ? { passphrase: f.livesyncPassphrase }
+        : {}),
+    },
     github: {
-      owner: req(env, 'GITHUB_OWNER'),
-      repo: req(env, 'GITHUB_REPO'),
-      defaultBranch: opt(env, 'GITHUB_DEFAULT_BRANCH') ?? 'master',
+      owner: f.githubOwner,
+      repo: f.githubRepo,
+      defaultBranch: f.githubDefaultBranch,
     },
     octoSts: {
-      url: req(env, 'OCTO_STS_URL'),
-      scope: req(env, 'OCTO_STS_SCOPE'),
-      identity: req(env, 'OCTO_STS_IDENTITY'),
-      saTokenPath:
-        opt(env, 'OCTO_STS_SA_TOKEN_PATH') ??
-        '/var/run/secrets/tokens/octo-sts-token',
+      url: f.octoStsUrl,
+      scope: f.octoStsScope,
+      identity: f.octoStsIdentity,
+      saTokenPath: f.octoStsSaTokenPath,
     },
     r2: {
-      bucket: req(env, 'R2_BUCKET'),
-      publicBaseUrl: req(env, 'R2_PUBLIC_BASE_URL'),
-      accountId: req(env, 'R2_ACCOUNT_ID'),
-      accessKeyId: req(env, 'R2_ACCESS_KEY_ID'),
-      secretAccessKey: req(env, 'R2_SECRET_ACCESS_KEY'),
-      variantWidths: parseWidths(
-        env['IMAGE_VARIANT_WIDTHS'] ?? '640,1280,1920',
-      ),
+      bucket: f.r2Bucket,
+      publicBaseUrl: f.r2PublicBaseUrl,
+      accountId: f.r2AccountId,
+      accessKeyId: f.r2AccessKeyId,
+      secretAccessKey: f.r2SecretAccessKey,
+      variantWidths: f.r2VariantWidths,
     },
-  }
+  }))
 }

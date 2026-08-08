@@ -17,6 +17,7 @@ import type { LiveSyncAdapter, NoteMetadata } from '#adapters/livesync'
 import { apply, type ApplyDeps } from '#domain/apply-orchestrator'
 import { parseFrontmatter } from '#domain/frontmatter'
 import { buildPlan, type PlanLoaders } from '#domain/plan-builder'
+import { logger } from '#logger'
 
 export interface AppDeps {
   bearerToken: string
@@ -129,10 +130,13 @@ async function listNotesHandler(
       try {
         content = (await deps.liveSync.readNote(meta.docId)).content
       } catch (e) {
-        console.warn('[notes] readNote failed; skipping', {
-          docId: meta.docId,
-          error: e instanceof Error ? e.message : String(e),
-        })
+        logger.warn(
+          {
+            docId: meta.docId,
+            error: e instanceof Error ? e.message : String(e),
+          },
+          '[notes] readNote failed; skipping',
+        )
         captureWithFingerprint(e, NOTES_READ_FINGERPRINT, {
           extras: { docId: meta.docId },
         })
@@ -140,10 +144,10 @@ async function listNotesHandler(
       }
       const parsed = parseFrontmatter(content)
       if (parsed.isErr()) {
-        console.warn('[notes] parseFrontmatter failed; skipping', {
-          docId: meta.docId,
-          error: parsed.error.message,
-        })
+        logger.warn(
+          { docId: meta.docId, error: parsed.error.message },
+          '[notes] parseFrontmatter failed; skipping',
+        )
         return null
       }
       const { frontmatter, body } = parsed.value
@@ -395,7 +399,7 @@ export function createApp(deps: AppDeps): OpenAPIHono {
   })
 
   app.onError((err, c) => {
-    console.error('[app] uncaught error', err)
+    logger.error({ error: err.message }, '[app] uncaught error')
     captureWithFingerprint(err, UNCAUGHT_ERROR_FINGERPRINT)
     return c.json(
       {

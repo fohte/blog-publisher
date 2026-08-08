@@ -6,6 +6,7 @@ import {
   GitHubClient,
 } from '#adapters/github-client'
 import type { OctoStsTokenCache } from '#auth/octo-sts'
+import { logger } from '#logger'
 
 interface RecordedCall {
   route: string
@@ -268,7 +269,7 @@ describe('GitHubClient.resolveCiStatus', () => {
 
 describe('createOctoStsAuthStrategy', () => {
   beforeEach(() => {
-    vi.spyOn(console, 'warn').mockImplementation(() => {})
+    vi.spyOn(logger, 'warn').mockImplementation(() => {})
   })
   afterEach(() => {
     vi.restoreAllMocks()

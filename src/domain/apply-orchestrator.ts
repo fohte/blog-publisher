@@ -17,6 +17,7 @@ import {
   transformMarkdownToMdx,
 } from '#domain/mdx-transformer'
 import { buildPlan, type PlanLoaders } from '#domain/plan-builder'
+import { logger } from '#logger'
 
 export interface ApplyDeps {
   loaders: PlanLoaders
@@ -235,10 +236,13 @@ export async function apply(
       (e) => e,
     )
     if (cleanupResult.isErr()) {
-      console.error('[apply] orphan branch left behind', {
-        branch,
-        cleanupErr: cleanupResult.error,
-      })
+      logger.error(
+        {
+          branch,
+          error: toMessage(cleanupResult.error),
+        },
+        '[apply] orphan branch left behind',
+      )
       captureWithFingerprint(cleanupResult.error, ORPHAN_BRANCH_FINGERPRINT, {
         extras: { branch },
       })

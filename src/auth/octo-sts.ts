@@ -2,6 +2,8 @@ import { readFile } from 'node:fs/promises'
 
 import { captureWithFingerprint } from '@fohte/service-kit/observability'
 
+import { logger } from '#logger'
+
 const EXCHANGE_FAILED_FINGERPRINT = 'auth.octo-sts.exchange-failed'
 
 export interface OctoStsTokenCache {
@@ -137,10 +139,13 @@ export class OctoStsTokenCacheImpl implements OctoStsTokenCache {
           throw err
         }
       }
-      console.warn('[octo-sts] exchange failed; retrying once', {
-        error: err instanceof Error ? err.message : String(err),
-        status: err instanceof OctoStsAuthError ? err.status : undefined,
-      })
+      logger.warn(
+        {
+          error: err instanceof Error ? err.message : String(err),
+          status: err instanceof OctoStsAuthError ? err.status : undefined,
+        },
+        '[octo-sts] exchange failed; retrying once',
+      )
       await this.sleepImpl(RETRY_BACKOFF_MS)
       return this.exchange()
     }
