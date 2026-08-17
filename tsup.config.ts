@@ -12,4 +12,8 @@ export default defineConfig({
   // @opentelemetry/auto-instrumentations-node's module-patching hook still
   // applies to the real package in node_modules instead of a bundled copy.
   skipNodeModulesBundle: true,
+  // skipNodeModulesBundle treats subpath imports (`#foo`) as external too,
+  // leaving `./src/*.ts` specifiers unresolved in a runtime image that only
+  // ships dist/. Force-bundle them so dist stays self-contained.
+  noExternal: [/^#/],
 })
