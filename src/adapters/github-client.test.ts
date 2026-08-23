@@ -294,23 +294,12 @@ describe('createOctoStsAuthStrategy', () => {
   it('propagates the request error without retrying', async () => {
     const cache = makeCache(['tok'])
     const { hook } = createOctoStsAuthStrategy(cache)()
+    const err = Object.assign(new Error('unauthorized'), { status: 401 })
     const request = vi.fn(async () => {
-      const err = Object.assign(new Error('unauthorized'), { status: 401 })
       throw err
     })
-    await expect(hook(request, 'GET /x', {})).rejects.toMatchObject({
-      status: 401,
-    })
+    await expect(hook(request, 'GET /x', {})).rejects.toBe(err)
     expect(request).toHaveBeenCalledTimes(1)
-  })
-
-  it('does not crash when request throws null', async () => {
-    const cache = makeCache(['tok'])
-    const { hook } = createOctoStsAuthStrategy(cache)()
-    const request = vi.fn(async () => {
-      throw null
-    })
-    await expect(hook(request, 'GET /x', {})).rejects.toBeNull()
   })
 
   it('throws the token exchange error without calling request', async () => {

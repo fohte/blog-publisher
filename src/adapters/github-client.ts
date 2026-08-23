@@ -9,6 +9,8 @@ import { logger } from '#logger'
 const GITHUB_API_FINGERPRINT = 'adapters.github-client.api-error'
 const CI_DEPLOYMENT_LOOKUP_FINGERPRINT =
   'adapters.github-client.ci-deployment-lookup-failed'
+const OCTO_STS_EXCHANGE_FAILED_FINGERPRINT =
+  'adapters.github-client.octo-sts-exchange-failed'
 
 export class GitHubApiError extends Error {
   constructor(message: string, cause: unknown) {
@@ -91,6 +93,10 @@ export function createOctoStsAuthStrategy(tokenCache: OctoStsTokenCache) {
     ): Promise<unknown> => {
       const tokenResult = await tokenCache.getToken()
       if (tokenResult.isErr()) {
+        captureWithFingerprint(
+          tokenResult.error,
+          OCTO_STS_EXCHANGE_FAILED_FINGERPRINT,
+        )
         // eslint-disable-next-line no-restricted-syntax -- interops with Octokit's throw-based request contract
         throw tokenResult.error
       }
