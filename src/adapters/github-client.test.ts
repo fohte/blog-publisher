@@ -1,12 +1,13 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import type { OctoStsTokenCache } from '@fohte/service-kit/octo-sts'
+import { OctoStsError } from '@fohte/service-kit/octo-sts'
+import { errAsync, okAsync } from 'neverthrow'
+import { describe, expect, it, vi } from 'vitest'
 
 import {
   createOctoStsAuthStrategy,
   GitHubApiError,
   GitHubClient,
 } from '#adapters/github-client'
-import type { OctoStsTokenCache } from '#auth/octo-sts'
-import { logger } from '#logger'
 
 interface RecordedCall {
   route: string
@@ -268,28 +269,14 @@ describe('GitHubClient.resolveCiStatus', () => {
 })
 
 describe('createOctoStsAuthStrategy', () => {
-  beforeEach(() => {
-    vi.spyOn(logger, 'warn').mockImplementation(() => {})
-  })
-  afterEach(() => {
-    vi.restoreAllMocks()
-  })
-
-  function makeCache(tokens: string[]): OctoStsTokenCache & {
-    invalidated: string[]
-  } {
+  function makeCache(tokens: string[]): OctoStsTokenCache {
     const stream = [...tokens]
-    const invalidated: string[] = []
     return {
-      getToken: vi.fn(async () => {
+      getToken: vi.fn(() => {
         const t = stream.shift()
         if (t === undefined) throw new Error('no more tokens')
-        return t
+        return okAsync(t)
       }),
-      invalidate: vi.fn((token?: string) => {
-        invalidated.push(token ?? '<none>')
-      }),
-      invalidated,
     }
   }
 
@@ -304,42 +291,16 @@ describe('createOctoStsAuthStrategy', () => {
     })
   })
 
-  it('on 401 invalidates cache and retries once with a fresh token', async () => {
-    const cache = makeCache(['stale', 'fresh'])
-    const { hook } = createOctoStsAuthStrategy(cache)()
-    let calls = 0
-    const request = vi.fn(
-      async (_route: string, params: Record<string, unknown>) => {
-        calls += 1
-        if (calls === 1) {
-          const err = Object.assign(new Error('unauthorized'), { status: 401 })
-          throw err
-        }
-        const headers = params['headers'] as Record<string, string>
-        return { data: 'ok', sentAuth: headers['authorization'] }
-      },
-    )
-    const res = (await hook(request, 'GET /x', {})) as {
-      data: string
-      sentAuth: string
-    }
-    expect(res.data).toBe('ok')
-    expect(res.sentAuth).toBe('token fresh')
-    expect(cache.invalidated).toEqual(['stale'])
-    expect(request).toHaveBeenCalledTimes(2)
-  })
-
-  it('does not retry on non-401 errors', async () => {
+  it('propagates the request error without retrying', async () => {
     const cache = makeCache(['tok'])
     const { hook } = createOctoStsAuthStrategy(cache)()
     const request = vi.fn(async () => {
-      const err = Object.assign(new Error('boom'), { status: 500 })
+      const err = Object.assign(new Error('unauthorized'), { status: 401 })
       throw err
     })
     await expect(hook(request, 'GET /x', {})).rejects.toMatchObject({
-      status: 500,
+      status: 401,
     })
-    expect(cache.invalidated).toEqual([])
     expect(request).toHaveBeenCalledTimes(1)
   })
 
@@ -350,6 +311,16 @@ describe('createOctoStsAuthStrategy', () => {
       throw null
     })
     await expect(hook(request, 'GET /x', {})).rejects.toBeNull()
-    expect(cache.invalidated).toEqual([])
+  })
+
+  it('throws the token exchange error without calling request', async () => {
+    const exchangeError = new OctoStsError('exchange failed', undefined)
+    const cache: OctoStsTokenCache = {
+      getToken: vi.fn(() => errAsync(exchangeError)),
+    }
+    const { hook } = createOctoStsAuthStrategy(cache)()
+    const request = vi.fn(async () => ({ data: 'ok' }))
+    await expect(hook(request, 'GET /x', {})).rejects.toBe(exchangeError)
+    expect(request).not.toHaveBeenCalled()
   })
 })

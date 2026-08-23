@@ -5,13 +5,13 @@ import { observability } from '#bootstrap'
 
 import { S3Client } from '@aws-sdk/client-s3'
 import { serve } from '@hono/node-server'
+import { createOctoStsTokenCache } from '@fohte/service-kit/octo-sts'
 import { createShutdownHandler } from '@fohte/service-kit/shutdown'
 
 import { GitHubClient } from '#adapters/github-client'
 import { ImageProcessor } from '#adapters/image-processor'
 import { LiveSyncAdapter } from '#adapters/livesync'
 import { createApp } from '#app'
-import { OctoStsTokenCacheImpl } from '#auth/octo-sts'
 import { loadConfig } from '#config'
 import { logger } from '#logger'
 
@@ -37,7 +37,7 @@ async function main(): Promise<void> {
       : {}),
   })
 
-  const tokenCache = new OctoStsTokenCacheImpl({
+  const tokenCache = createOctoStsTokenCache({
     url: config.octoSts.url,
     scope: config.octoSts.scope,
     identity: config.octoSts.identity,

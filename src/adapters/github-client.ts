@@ -1,9 +1,9 @@
 import type { BlogPrSummary, CiStatus } from '@fohte/blog-publisher-contract'
 import { captureWithFingerprint } from '@fohte/service-kit/observability'
+import type { OctoStsTokenCache } from '@fohte/service-kit/octo-sts'
 import { throttling } from '@octokit/plugin-throttling'
 import { Octokit } from 'octokit'
 
-import type { OctoStsTokenCache } from '#auth/octo-sts'
 import { logger } from '#logger'
 
 const GITHUB_API_FINGERPRINT = 'adapters.github-client.api-error'
@@ -79,11 +79,6 @@ interface PullResponse {
   head: { ref: string; sha: string }
 }
 
-function isUnauthorized(err: unknown): boolean {
-  if (typeof err !== 'object' || err === null) return false
-  return 'status' in err && err.status === 401
-}
-
 export function createOctoStsAuthStrategy(tokenCache: OctoStsTokenCache) {
   return () => ({
     hook: async (
@@ -94,31 +89,17 @@ export function createOctoStsAuthStrategy(tokenCache: OctoStsTokenCache) {
       route: string,
       parameters: Record<string, unknown> = {},
     ): Promise<unknown> => {
-      const send = async (token: string): Promise<unknown> => {
-        const headers = {
-          ...((parameters['headers'] as Record<string, string> | undefined) ??
-            {}),
-          authorization: `token ${token}`,
-        }
-        return request(route, { ...parameters, headers })
+      const tokenResult = await tokenCache.getToken()
+      if (tokenResult.isErr()) {
+        // eslint-disable-next-line no-restricted-syntax -- interops with Octokit's throw-based request contract
+        throw tokenResult.error
       }
-      const token = await tokenCache.getToken()
-      // eslint-disable-next-line no-restricted-syntax -- interops with Octokit's throw-based request contract
-      try {
-        return await send(token)
-      } catch (err) {
-        // eslint-disable-next-line no-restricted-syntax -- re-throws whatever Octokit's throw-based contract raised, once confirmed not a 401
-        if (!isUnauthorized(err)) throw err
-        logger.warn(
-          {},
-          '[github-client] octo-sts token rejected (401); rotating',
-        )
-        // Pass the token we just used so a sibling request that already
-        // rotated the cache to a newer token is not invalidated.
-        tokenCache.invalidate(token)
-        const fresh = await tokenCache.getToken()
-        return send(fresh)
+      const headers = {
+        ...((parameters['headers'] as Record<string, string> | undefined) ??
+          {}),
+        authorization: `token ${tokenResult.value}`,
       }
+      return request(route, { ...parameters, headers })
     },
   })
 }
