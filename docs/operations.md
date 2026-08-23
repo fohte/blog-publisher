@@ -36,7 +36,7 @@ Initial rollout can point at a fork or a `test/blog-publish-dry` branch for dry-
 
 The deployment must keep a valid OIDC token (audience `octo-sts.fohte.net`, subject matching the trust policy identity) at the path given by `OCTO_STS_SA_TOKEN_PATH`. The Service re-reads the file on every exchange, so an out-of-band rotation that overwrites the file in place is enough — no restart required.
 
-The installation token is cached in memory with a 5-minute safety margin; concurrent requests share a single in-flight exchange. On a 401 from GitHub (clock skew etc.) the client invalidates the cache and retries the request once.
+The installation token is cached in memory with a 5-minute safety margin. Concurrent requests do not share an in-flight exchange, so a cache miss during a burst can trigger duplicate exchanges. On a 401 from GitHub the request fails immediately; there is no automatic invalidate-and-retry.
 
 ## Slack App setup
 
