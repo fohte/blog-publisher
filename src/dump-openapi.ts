@@ -1,4 +1,4 @@
-import { type AppDeps, createApp } from '#app'
+import { type AppDeps, createApp, openApiDocConfig } from '#app'
 
 const unreachable = (): never => {
   // eslint-disable-next-line no-restricted-syntax -- OpenAPI generation only reads route schemas; handlers are never invoked, so any call is a bug
@@ -32,9 +32,6 @@ const deps: AppDeps = {
 
 const app = createApp(deps)
 
-const document = app.getOpenAPIDocument({
-  openapi: '3.1.0',
-  info: { title: 'blog-publisher', version: '1' },
-})
+const document = app.getOpenAPIDocument(openApiDocConfig)
 
 console.log(JSON.stringify(document, null, 2))
