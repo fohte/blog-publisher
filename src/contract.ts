@@ -6,7 +6,6 @@ export const Note = z.object({
   path: z.string(),
   title: z.string(),
   description: z.string().optional(),
-  // Determined by matching publishedFilename against existing fohte.net articles.
   kind: z.enum(['new', 'update']),
   mtime: z.number().int(),
 })
@@ -56,7 +55,7 @@ export const Plan = z.object({
 })
 export type Plan = z.infer<typeof Plan>
 
-/** Response of `POST /apply`. Discriminated by `kind`: success, plan changed, already applied, or failed. */
+/** Response of `POST /apply`. */
 export const ApplyResult = z.discriminatedUnion('kind', [
   z.object({
     kind: z.literal('success'),

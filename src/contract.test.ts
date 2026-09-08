@@ -75,8 +75,8 @@ describe('PlanItem', () => {
   })
 })
 
-describe('Plan', () => {
-  const validPlan = {
+function validPlan(): Plan {
+  return {
     signature: 'a1b2c3d4',
     items: [
       {
@@ -96,18 +96,17 @@ describe('Plan', () => {
       { sourcePath: 'images/x.webp', hash: 'deadbeef', alreadyUploaded: false },
     ],
   }
+}
 
+describe('Plan', () => {
   it('parses a plan with items, issues, and images', () => {
-    expect(Plan.parse(validPlan)).toEqual(validPlan)
+    const plan = validPlan()
+    expect(Plan.parse(plan)).toEqual(plan)
   })
 
   it('rejects a plan missing the signature', () => {
-    const result = Plan.safeParse({
-      items: validPlan.items,
-      warnings: validPlan.warnings,
-      errors: validPlan.errors,
-      imagesToUpload: validPlan.imagesToUpload,
-    })
+    const { items, warnings, errors, imagesToUpload } = validPlan()
+    const result = Plan.safeParse({ items, warnings, errors, imagesToUpload })
     expect(result.success).toBe(false)
   })
 })
@@ -135,6 +134,24 @@ describe('ApplyResult', () => {
       },
     }
     expect(ApplyResult.parse(planChanged)).toEqual(planChanged)
+  })
+
+  it('parses the alreadyApplied variant', () => {
+    const alreadyApplied = {
+      kind: 'alreadyApplied',
+      prNumber: 42,
+      prUrl: 'https://github.com/fohte/fohte.net/pull/42',
+    }
+    expect(ApplyResult.parse(alreadyApplied)).toEqual(alreadyApplied)
+  })
+
+  it('parses the failed variant', () => {
+    const failed = {
+      kind: 'failed',
+      code: 'GitHubApiError',
+      message: 'failed to create branch',
+    }
+    expect(ApplyResult.parse(failed)).toEqual(failed)
   })
 
   it('rejects an unknown kind', () => {
