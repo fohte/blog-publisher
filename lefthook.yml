@@ -2,8 +2,13 @@ pre-commit:
   commands:
     dump-openapi:
       priority: 1
-      glob: 'src/**/*.ts'
-      run: pnpm run dump-openapi > openapi.json.tmp && mv openapi.json.tmp openapi.json && git add openapi.json
+      # lefthook's default glob uses gobwas/glob without a delimiter, so a
+      # single '*' already matches nested paths — 'src/**/*.ts' would only
+      # match files two or more levels deep and silently skip src/app.ts.
+      glob: 'src/*.ts'
+      # `prettier`'s {staged_files} is captured before this command runs, so
+      # it never picks up openapi.json — format it here instead.
+      run: pnpm run dump-openapi > openapi.json.tmp && mv openapi.json.tmp openapi.json && pnpm exec prettier --write openapi.json && git add openapi.json
 
     format:
       # Remove trailing whitespace and ensure final newline
