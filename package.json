@@ -9,6 +9,7 @@
   "scripts": {
     "start": "node --import @fohte/service-kit/otel-register dist/index.js",
     "dev": "tsx watch --import @fohte/service-kit/otel-register src/index.ts",
+    "dump-openapi": "tsx src/dump-openapi.ts",
     "lint": "eslint .",
     "format:eslint": "eslint --fix .",
     "format:prettier": "prettier --write .",

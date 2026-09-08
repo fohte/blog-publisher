@@ -1,5 +1,10 @@
 pre-commit:
   commands:
+    dump-openapi:
+      priority: 1
+      glob: 'src/**/*.ts'
+      run: pnpm run dump-openapi > openapi.json.tmp && mv openapi.json.tmp openapi.json && git add openapi.json
+
     format:
       # Remove trailing whitespace and ensure final newline
       run: basefmt {staged_files}
