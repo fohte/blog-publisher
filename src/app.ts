@@ -173,6 +173,11 @@ async function listNotesHandler(
   return candidates.filter((n): n is z.infer<typeof Note> => n !== null)
 }
 
+export const openApiDocConfig = {
+  openapi: '3.1.0' as const,
+  info: { title: 'blog-publisher', version: '1' },
+}
+
 export function createApp(deps: AppDeps): OpenAPIHono {
   const app = new OpenAPIHono({
     defaultHook: (result, c) => {
@@ -393,10 +398,7 @@ export function createApp(deps: AppDeps): OpenAPIHono {
     },
   )
 
-  app.doc('/doc', {
-    openapi: '3.1.0',
-    info: { title: 'blog-publisher', version: '1' },
-  })
+  app.doc('/doc', openApiDocConfig)
 
   app.onError((err, c) => {
     logger.error({ error: err.message }, '[app] uncaught error')
