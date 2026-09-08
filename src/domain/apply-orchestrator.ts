@@ -1,4 +1,3 @@
-import type { ApplyResult, BlogPrSummary } from '@fohte/blog-publisher-contract'
 import { captureWithFingerprint } from '@fohte/service-kit/observability'
 import yaml from 'js-yaml'
 import { ResultAsync } from 'neverthrow'
@@ -6,6 +5,7 @@ import { ResultAsync } from 'neverthrow'
 import type { FileToCommit, GitHubClient } from '#adapters/github-client'
 import type { ImageInput, ImageProcessor } from '#adapters/image-processor'
 import type { LiveSyncNote } from '#adapters/livesync'
+import type { ApplyResult, BlogPrSummary } from '#contract'
 import {
   generatePublishedFilename,
   mapToPublishedFrontmatter,

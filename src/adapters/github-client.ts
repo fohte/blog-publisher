@@ -1,9 +1,9 @@
-import type { BlogPrSummary, CiStatus } from '@fohte/blog-publisher-contract'
 import { captureWithFingerprint } from '@fohte/service-kit/observability'
 import type { OctoStsTokenCache } from '@fohte/service-kit/octo-sts'
 import { throttling } from '@octokit/plugin-throttling'
 import { Octokit } from 'octokit'
 
+import type { BlogPrSummary, CiStatus } from '#contract'
 import { logger } from '#logger'
 
 const GITHUB_API_FINGERPRINT = 'adapters.github-client.api-error'
