@@ -11,9 +11,6 @@ importers:
       '@aws-sdk/client-s3':
         specifier: 3.1057.0
         version: 3.1057.0
-      '@fohte/blog-publisher-contract':
-        specifier: 0.1.0
-        version: 0.1.0
       '@fohte/service-kit':
         specifier: 0.1.13
         version: 0.1.13(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.219.0(@opentelemetry/api@1.9.1))(pino@10.3.1)(supports-color@10.2.2)
@@ -714,9 +711,6 @@ packages:
   '@eslint/plugin-kit@0.7.2':
     resolution: {integrity: sha512-+CNAzxglkrpNf/kKywqQfk74QjtceuOE7Qm+AF8miRvPF/wmmK5+OJOgVh3AVTT3RP2mH3+FOaxlE5v72owk0A==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=24}
-
-  '@fohte/blog-publisher-contract@0.1.0':
-    resolution: {integrity: sha512-TnyklTFBcsWxaBDKAiXLBzblm92NLIFSerUHmFbstxBMoI/MQTTA7HTt7NpEHoZYOqtrjwcLjF0Qt8AIG02KQw==}
 
   '@fohte/eslint-config@0.4.1':
     resolution: {integrity: sha512-mvF4IkJQOq7TH27XfTPBhQPK6MbPUWcSOQgJlL2QvIdH4AR350ajv+EXUc9f7loKIAlpRqBaKZvOehwLlWUvGA==}
@@ -4405,10 +4399,6 @@ snapshots:
     dependencies:
       '@eslint/core': 1.2.1
       levn: 0.4.1
-
-  '@fohte/blog-publisher-contract@0.1.0':
-    dependencies:
-      zod: 4.4.3
 
   '@fohte/eslint-config@0.4.1(aeebf39542607af4b4af9319ef23983d)':
     dependencies:

@@ -1,7 +1,7 @@
-import type { BlogPrSummary } from '@fohte/blog-publisher-contract'
 import { describe, expect, it, vi } from 'vitest'
 
 import type { LiveSyncNote } from '#adapters/livesync'
+import type { BlogPrSummary } from '#contract'
 import { apply, type ApplyDeps } from '#domain/apply-orchestrator'
 import type { PlanLoaders } from '#domain/plan-builder'
 

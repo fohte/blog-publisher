@@ -1,7 +1,7 @@
-import type { BlogPrSummary } from '@fohte/blog-publisher-contract'
 import { describe, expect, it, vi } from 'vitest'
 
 import { type AppDeps, createApp } from '#app'
+import type { BlogPrSummary } from '#contract'
 
 function ok(slug: string): string {
   return `---\ntitle: ${slug}\ndate: 2026-01-01\ndescription: d\nslug: ${slug}\n---\nbody`
@@ -99,12 +99,44 @@ describe('createApp', () => {
     expect(body).toHaveLength(1)
   })
 
+  it('GET /prs returns BlogPrSummary list', async () => {
+    const pr: BlogPrSummary = {
+      number: 1,
+      url: 'https://example/pr/1',
+      branch: 'blog/a1b2c3d4',
+      state: 'closed',
+      title: 'Publish hello',
+      createdAt: '2026-01-01T00:00:00.000Z',
+      mergedAt: '2026-01-02T00:00:00.000Z',
+    }
+    const deps = makeDeps({
+      github: {
+        ...makeDeps().github,
+        listBlogPrs: vi.fn(async () => [pr]),
+      },
+    })
+    const app = createApp(deps)
+    const res = await app.request('/prs', { headers: AUTH })
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual([pr])
+  })
+
   it('POST /plan validates body (400)', async () => {
     const app = createApp(makeDeps())
     const res = await app.request('/plan', {
       method: 'POST',
       headers: { ...AUTH, 'content-type': 'application/json' },
       body: JSON.stringify({ wrong: true }),
+    })
+    expect(res.status).toBe(400)
+  })
+
+  it('POST /plan rejects an empty docIds array (400)', async () => {
+    const app = createApp(makeDeps())
+    const res = await app.request('/plan', {
+      method: 'POST',
+      headers: { ...AUTH, 'content-type': 'application/json' },
+      body: JSON.stringify({ docIds: [] }),
     })
     expect(res.status).toBe(400)
   })

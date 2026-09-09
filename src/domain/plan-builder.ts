@@ -1,8 +1,7 @@
 import { createHash } from 'node:crypto'
 
-import type { Plan, PlanIssue, PlanItem } from '@fohte/blog-publisher-contract'
-
 import type { LiveSyncNote } from '#adapters/livesync'
+import type { Plan, PlanIssue, PlanItem } from '#contract'
 import {
   deriveSlug,
   type Frontmatter,
