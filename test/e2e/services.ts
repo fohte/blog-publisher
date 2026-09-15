@@ -99,7 +99,7 @@ export async function resetCouchDb(ep: E2EEndpoints): Promise<void> {
   }
 }
 
-export async function insertDoc(
+async function insertDoc(
   ep: E2EEndpoints,
   doc: Record<string, unknown> & { _id: string },
 ): Promise<void> {

@@ -21,7 +21,7 @@ export interface ImageVariant {
   url: string
 }
 
-export interface ImageMapEntry {
+interface ImageMapEntry {
   base: string
   variants: ImageVariant[]
 }
@@ -30,7 +30,7 @@ export type ImageUrlMap = Record<string, ImageMapEntry>
 
 export type SlugResolver = (target: string) => string | null
 
-export interface TransformIssue {
+interface TransformIssue {
   code: ErrorCode
   message: string
 }

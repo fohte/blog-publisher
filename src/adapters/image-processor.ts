@@ -10,12 +10,11 @@ import sharp from 'sharp'
 
 import { DomainError } from '#domain/errors'
 import type {
-  ImageMapEntry as ImageUrlMapEntry,
   ImageUrlMap,
   ImageVariant as ImageVariantUrl,
 } from '#domain/mdx-transformer'
 
-export type { ImageUrlMap, ImageUrlMapEntry, ImageVariantUrl }
+export type { ImageUrlMap }
 
 const IMAGE_UPLOAD_FINGERPRINT = 'adapters.image-processor.upload-failed'
 

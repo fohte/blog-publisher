@@ -1,7 +1,7 @@
 {
   "name": "blog-publisher",
   "private": true,
-  "packageManager": "pnpm@11.16.0",
+  "packageManager": "pnpm@12.3.4",
   "type": "module",
   "imports": {
     "#*": "./src/*.ts"
@@ -24,26 +24,25 @@
   },
   "devDependencies": {
     "@commitlint/cli": "21.2.2",
-    "@eslint/eslintrc": "3.3.6",
-    "@fohte/eslint-config": "0.4.1",
-    "@ninoseki/eslint-plugin-neverthrow": "0.2.0",
+    "@fohte/eslint-config": "0.4.4",
+    "@ninoseki/eslint-plugin-neverthrow": "0.3.1",
     "@tsconfig/node-lts": "24.0.1",
     "@tsconfig/strictest": "2.0.8",
     "@types/js-yaml": "4.0.9",
     "@types/mdast": "4.0.4",
     "@types/node": "24.13.3",
-    "@types/unist": "3.0.3",
     "concurrently": "10.0.5",
-    "eslint": "10.6.0",
+    "eslint": "10.10.0",
+    "knip": "6.34.0",
     "prettier": "3.9.6",
     "tsup": "8.5.1",
-    "tsx": "4.23.12",
+    "tsx": "4.23.13",
     "typescript": "6.0.3",
     "vitest": "4.1.11"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.1057.0",
-    "@fohte/service-kit": "0.1.13",
+    "@fohte/service-kit": "0.1.14",
     "@hono/node-server": "2.0.10",
     "@hono/zod-openapi": "1.4.0",
     "@octokit/plugin-throttling": "11.0.5",
@@ -58,12 +57,8 @@
     "neverthrow": "8.2.0",
     "octokit": "5.0.5",
     "pino": "10.3.1",
-    "remark-frontmatter": "5.0.0",
     "remark-mdx": "3.1.1",
-    "remark-parse": "11.0.0",
-    "remark-stringify": "11.0.0",
     "sharp": "0.34.5",
-    "unified": "11.0.5",
     "unist-util-visit": "5.1.0",
     "zod": "4.4.3"
   }
