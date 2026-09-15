@@ -17,30 +17,10 @@
     "test": "conc pnpm:test:type pnpm:test:unit",
     "test:type": "tsc --noEmit",
     "test:unit": "vitest run",
-<<<<<<< before updating
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
     "e2e:up": "docker compose -f docker-compose.e2e.yml up -d --wait",
     "e2e:down": "docker compose -f docker-compose.e2e.yml down -v",
     "build": "tsup"
-||||||| last update
-    "build": "tsup",
-    "start": "node --import @fohte/service-kit/otel-register dist/index.js",
-    "dev": "tsx watch --import @fohte/service-kit/otel-register src/index.ts"
-  },
-  "dependencies": {
-    "@fohte/service-kit": "0.1.11",
-    "@opentelemetry/api": "1.9.1",
-    "neverthrow": "8.2.0"
-=======
-    "build": "tsup",
-    "start": "node --import @fohte/service-kit/otel-register dist/index.js",
-    "dev": "tsx watch --import @fohte/service-kit/otel-register src/index.ts"
-  },
-  "dependencies": {
-    "@fohte/service-kit": "0.1.14",
-    "@opentelemetry/api": "1.9.1",
-    "neverthrow": "8.2.0"
->>>>>>> after updating
   },
   "devDependencies": {
     "@commitlint/cli": "21.2.2",
@@ -51,7 +31,6 @@
     "@types/js-yaml": "4.0.9",
     "@types/mdast": "4.0.4",
     "@types/node": "24.13.3",
-    "@types/unist": "3.0.3",
     "concurrently": "10.0.5",
     "eslint": "10.10.0",
     "knip": "6.34.0",
@@ -60,11 +39,10 @@
     "tsx": "4.23.13",
     "typescript": "6.0.3",
     "vitest": "4.1.11"
-<<<<<<< before updating
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.1057.0",
-    "@fohte/service-kit": "0.1.13",
+    "@fohte/service-kit": "0.1.14",
     "@hono/node-server": "2.0.10",
     "@hono/zod-openapi": "1.4.0",
     "@octokit/plugin-throttling": "11.0.5",
@@ -79,17 +57,9 @@
     "neverthrow": "8.2.0",
     "octokit": "5.0.5",
     "pino": "10.3.1",
-    "remark-frontmatter": "5.0.0",
     "remark-mdx": "3.1.1",
-    "remark-parse": "11.0.0",
-    "remark-stringify": "11.0.0",
     "sharp": "0.34.5",
-    "unified": "11.0.5",
     "unist-util-visit": "5.1.0",
     "zod": "4.4.3"
-||||||| last update
-    "vitest": "4.1.10"
-=======
->>>>>>> after updating
   }
 }

@@ -3,19 +3,11 @@
 // eslint-disable-next-line simple-import-sort/imports -- must stay first
 import { observability } from '#bootstrap'
 
-<<<<<<< before updating
 import { S3Client } from '@aws-sdk/client-s3'
 import { serve } from '@hono/node-server'
 import { createOctoStsTokenCache } from '@fohte/service-kit/octo-sts'
 import { createShutdownHandler } from '@fohte/service-kit/shutdown'
-||||||| last update
-export const greet = (name: string): string => {
-  return `Hello, ${name}!`
-=======
-import { err, ok, type Result } from 'neverthrow'
->>>>>>> after updating
 
-<<<<<<< before updating
 import { GitHubClient } from '#adapters/github-client'
 import { ImageProcessor } from '#adapters/image-processor'
 import { LiveSyncAdapter } from '#adapters/livesync'
@@ -124,14 +116,6 @@ async function main(): Promise<void> {
     ],
     { logger },
   )
-||||||| last update
-export const greet = (name: string): string => {
-  return `Hello, ${name}!`
-=======
-export const greet = (name: string): Result<string, Error> => {
-  if (!name) return err(new Error('name must not be empty'))
-  return ok(`Hello, ${name}!`)
->>>>>>> after updating
 }
 
 main().catch((err: unknown) => {
