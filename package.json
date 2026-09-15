@@ -1,7 +1,7 @@
 {
   "name": "blog-publisher",
   "private": true,
-  "packageManager": "pnpm@11.16.0",
+  "packageManager": "pnpm@12.3.4",
   "type": "module",
   "imports": {
     "#*": "./src/*.ts"
@@ -17,16 +17,35 @@
     "test": "conc pnpm:test:type pnpm:test:unit",
     "test:type": "tsc --noEmit",
     "test:unit": "vitest run",
+<<<<<<< before updating
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
     "e2e:up": "docker compose -f docker-compose.e2e.yml up -d --wait",
     "e2e:down": "docker compose -f docker-compose.e2e.yml down -v",
     "build": "tsup"
+||||||| last update
+    "build": "tsup",
+    "start": "node --import @fohte/service-kit/otel-register dist/index.js",
+    "dev": "tsx watch --import @fohte/service-kit/otel-register src/index.ts"
+  },
+  "dependencies": {
+    "@fohte/service-kit": "0.1.11",
+    "@opentelemetry/api": "1.9.1",
+    "neverthrow": "8.2.0"
+=======
+    "build": "tsup",
+    "start": "node --import @fohte/service-kit/otel-register dist/index.js",
+    "dev": "tsx watch --import @fohte/service-kit/otel-register src/index.ts"
+  },
+  "dependencies": {
+    "@fohte/service-kit": "0.1.14",
+    "@opentelemetry/api": "1.9.1",
+    "neverthrow": "8.2.0"
+>>>>>>> after updating
   },
   "devDependencies": {
     "@commitlint/cli": "21.2.2",
-    "@eslint/eslintrc": "3.3.6",
-    "@fohte/eslint-config": "0.4.1",
-    "@ninoseki/eslint-plugin-neverthrow": "0.2.0",
+    "@fohte/eslint-config": "0.4.4",
+    "@ninoseki/eslint-plugin-neverthrow": "0.3.1",
     "@tsconfig/node-lts": "24.0.1",
     "@tsconfig/strictest": "2.0.8",
     "@types/js-yaml": "4.0.9",
@@ -34,12 +53,14 @@
     "@types/node": "24.13.3",
     "@types/unist": "3.0.3",
     "concurrently": "10.0.5",
-    "eslint": "10.6.0",
+    "eslint": "10.10.0",
+    "knip": "6.34.0",
     "prettier": "3.9.6",
     "tsup": "8.5.1",
-    "tsx": "4.23.12",
+    "tsx": "4.23.13",
     "typescript": "6.0.3",
     "vitest": "4.1.11"
+<<<<<<< before updating
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.1057.0",
@@ -66,5 +87,9 @@
     "unified": "11.0.5",
     "unist-util-visit": "5.1.0",
     "zod": "4.4.3"
+||||||| last update
+    "vitest": "4.1.10"
+=======
+>>>>>>> after updating
   }
 }
