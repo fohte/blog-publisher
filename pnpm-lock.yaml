@@ -117,10 +117,10 @@ importers:
         version: 0.1.14(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.219.0(@opentelemetry/api@1.9.1))(pino@10.3.1)(supports-color@10.2.2)
       '@hono/node-server':
         specifier: 2.0.10
-        version: 2.0.10(hono@4.12.34)
+        version: 2.0.10(hono@4.13.5)
       '@hono/zod-openapi':
         specifier: 1.4.0
-        version: 1.4.0(hono@4.12.34)(zod@4.4.3)
+        version: 1.4.0(hono@4.13.5)(zod@4.4.3)
       '@octokit/plugin-throttling':
         specifier: 11.0.5
         version: 11.0.5(@octokit/core@7.0.7)
@@ -131,8 +131,8 @@ importers:
         specifier: 4.0.3
         version: 4.0.3
       hono:
-        specifier: 4.12.34
-        version: 4.12.34
+        specifier: 4.13.5
+        version: 4.13.5
       js-yaml:
         specifier: 4.2.0
         version: 4.2.0
@@ -3113,8 +3113,8 @@ packages:
     resolution: {integrity: sha512-iZyKG96/JwPz1N55vj2Ie2vXbhu440zfUfJvSwEqEbeLluk7NnapfGqa7LH0mOsnDxTF85Mx8/dyR6HfqcbmbQ==}
     engines: {node: '>=20'}
 
-  hono@4.12.34:
-    resolution: {integrity: sha512-GqXJqY/xJkJmuloTrnV1ZEXG3fqte+VjkUqoRNZXcrUidiUOP4fMSIHHY4tsqZBK++kVyWmt/AAfSUuy57/eSA==}
+  hono@4.13.5:
+    resolution: {integrity: sha512-O6+/eCYRkzzzy0rPWwKLiGBR1nFuUPZynnwjxN1MBA62NNqbT0wQEzQyK2gSO5yDIDB336sXQleAhOHrzlYyKw==}
     engines: {node: '>=16.9.0'}
 
   hookified@1.15.1:
@@ -4825,21 +4825,21 @@ snapshots:
       protobufjs: 7.6.6
       yargs: 17.7.3
 
-  '@hono/node-server@2.0.10(hono@4.12.34)':
+  '@hono/node-server@2.0.10(hono@4.13.5)':
     dependencies:
-      hono: 4.12.34
+      hono: 4.13.5
 
-  '@hono/zod-openapi@1.4.0(hono@4.12.34)(zod@4.4.3)':
+  '@hono/zod-openapi@1.4.0(hono@4.13.5)(zod@4.4.3)':
     dependencies:
       '@asteasolutions/zod-to-openapi': 8.5.0(zod@4.4.3)
-      '@hono/zod-validator': 0.8.0(hono@4.12.34)(zod@4.4.3)
-      hono: 4.12.34
+      '@hono/zod-validator': 0.8.0(hono@4.13.5)(zod@4.4.3)
+      hono: 4.13.5
       openapi3-ts: 4.6.1
       zod: 4.4.3
 
-  '@hono/zod-validator@0.8.0(hono@4.12.34)(zod@4.4.3)':
+  '@hono/zod-validator@0.8.0(hono@4.13.5)(zod@4.4.3)':
     dependencies:
-      hono: 4.12.34
+      hono: 4.13.5
       zod: 4.4.3
 
   '@humanfs/core@0.19.2':
@@ -7081,7 +7081,7 @@ snapshots:
     dependencies:
       hookified: 1.15.1
 
-  hono@4.12.34: {}
+  hono@4.13.5: {}
 
   hookified@1.15.1: {}
 
