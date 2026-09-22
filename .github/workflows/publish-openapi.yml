@@ -1,0 +1,29 @@
+name: Publish OpenAPI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - openapi.json
+
+permissions:
+  id-token: write
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Federate GitHub token via octo-sts
+        id: octo-sts
+        uses: octo-sts/action@f603d3be9d8dd9871a265776e625a27b00effe05 # v1.1.1
+        with:
+          scope: fohte/slack-bot
+          identity: slack-bot-blog-publisher-spec-dispatch
+          domain: octo-sts.fohte.net
+
+      - name: Notify slack-bot
+        env:
+          GH_TOKEN: ${{ steps.octo-sts.outputs.token }}
+        run: gh api --method POST repos/fohte/slack-bot/dispatches --field event_type=blog-publisher-spec-updated
