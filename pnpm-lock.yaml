@@ -116,8 +116,8 @@ importers:
         specifier: 0.1.16
         version: 0.1.16(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.219.0(@opentelemetry/api@1.9.1))(pino@10.3.1)(supports-color@10.2.2)
       '@hono/node-server':
-        specifier: 2.0.10
-        version: 2.0.10(hono@4.12.34)
+        specifier: 2.1.6
+        version: 2.1.6(hono@4.12.34)
       '@hono/zod-openapi':
         specifier: 1.4.0
         version: 1.4.0(hono@4.12.34)(zod@4.4.3)
@@ -865,11 +865,11 @@ packages:
     engines: {node: '>=6'}
     hasBin: true
 
-  '@hono/node-server@2.0.10':
-    resolution: {integrity: sha512-ZcnNVhKTmyDJeg0UlnZjvM73JBsTAuhrH/J4fjwGOw59PwOW51r4J+p6CsKZWXdKSme4MFqU62CZMOsdDrU4CA==}
+  '@hono/node-server@2.1.6':
+    resolution: {integrity: sha512-p/KH9MnfNcsm3sR6x4lNgm5j+QN4Et8srKredl9DZfXiyZ1UQ3aQ2YVpFLbqktYN5JI+DB+VZFKM2PqE5hLKjQ==}
     engines: {node: '>=20'}
     peerDependencies:
-      hono: ^4
+      hono: ^4 || ^5.0.0-0
 
   '@hono/zod-openapi@1.4.0':
     resolution: {integrity: sha512-AFchqR1N/NxfI4hUOSGI2/g8zLROxA1OE7Oh5JJFlTaGxhrdRyH+93gd0tIBpb0z8s9r8hUoNnaOBfHbdb4NMw==}
@@ -4836,7 +4836,7 @@ snapshots:
       protobufjs: 7.6.6
       yargs: 17.7.3
 
-  '@hono/node-server@2.0.10(hono@4.12.34)':
+  '@hono/node-server@2.1.6(hono@4.12.34)':
     dependencies:
       hono: 4.12.34
 
